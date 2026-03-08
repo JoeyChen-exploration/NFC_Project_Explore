@@ -12,6 +12,8 @@
 | 功能 | 说明 |
 |------|------|
 | 注册 / 登录 | Email + 密码，JWT 鉴权，30 天免登录 |
+| 忘记密码 | 邮箱申请重置链接，token 有效期 1 小时 |
+| 修改密码 | 登录后在「账号」tab 验证旧密码后修改 |
 | 编辑器 | 实时预览双栏，失焦自动保存 |
 | 自定义头像 | DiceBear 随机风格，点击一键更换 |
 | 自定义链接 | 最多 20 条，可开关、可排序 |
@@ -184,7 +186,7 @@ server {
 
 | 表 | 用途 |
 |----|------|
-| `users` | 账号（id, email, username, password_hash） |
+| `users` | 账号（id, email, username, password_hash, reset_token, reset_expires） |
 | `profiles` | 资料（name, bio, avatar_seed, theme_id, embed_url） |
 | `links` | 链接列表（label, url, active, sort_order） |
 | `socials` | 社交账号（instagram, twitter, github …） |
@@ -203,6 +205,9 @@ server {
 POST   /api/auth/register          注册
 POST   /api/auth/login             登录
 GET    /api/auth/me            🔒  获取当前用户
+POST   /api/auth/forgot-password   申请密码重置（发送重置链接）
+POST   /api/auth/reset-password    凭 token 重置密码
+PUT    /api/auth/change-password 🔒 登录后修改密码
 
 GET    /api/profile            🔒  获取完整资料
 PUT    /api/profile            🔒  更新基本资料
@@ -225,19 +230,23 @@ GET    /api/analytics          🔒  访问 / 点击统计
 1. **SQLite 并发限制**  
    `sql.js` 在每次写操作后将数据库序列化到磁盘，高并发时性能有限。用户数超过几千后建议迁移到 PostgreSQL。
 
-2. **JWT Secret**  
+2. **JWT Secret**
    `JWT_SECRET` 一旦修改，所有已登录用户的 token 立即失效，需重新登录。生产环境请妥善保管。
 
-3. **CORS 配置**  
+3. **密码重置邮件**
+   当前开发模式下，`POST /api/auth/forgot-password` 会在 API 响应中直接返回 `dev_reset_url`，并在服务器控制台打印重置链接，无需配置邮件服务即可测试。
+   生产环境请接入邮件服务（如 Nodemailer + SMTP / SendGrid），将重置链接通过邮件发送，并**移除**响应体中的 `dev_reset_url` 字段。重置 token 有效期为 **1 小时**，使用后立即失效。
+
+4. **CORS 配置**
    `FRONTEND_URL` 必须与前端实际部署地址完全匹配（含协议和端口），否则浏览器会拦截请求。
 
-4. **iframe 嵌入安全**  
+5. **iframe 嵌入安全**
    部分网站（如 Twitter/X）禁止被 iframe 嵌入，建议在 UI 中对用户给出提示。
 
-5. **头像上传**  
+6. **头像上传**
    当前使用 DiceBear 随机头像，生产环境建议接入文件上传服务（Cloudflare R2 / AWS S3）并在 `profiles` 表新增 `avatar_url` 字段。
 
-6. **Rate Limiting**  
+7. **Rate Limiting**
    公开接口（`/api/p/:username`）建议加 `express-rate-limit`，防止爬虫刷访问量数据。
 
 ---
@@ -247,6 +256,7 @@ GET    /api/analytics          🔒  访问 / 点击统计
 - [ ] 真实头像上传（Cloudflare R2）
 - [ ] 自定义域名绑定
 - [ ] 注册邮件验证
+- [ ] 密码重置接入真实邮件服务（Nodemailer / SendGrid）
 - [ ] 链接拖拽排序（前端 DnD）
 - [ ] 更多主题 / 自定义颜色选择器
 - [ ] PostgreSQL 迁移

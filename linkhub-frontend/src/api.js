@@ -39,6 +39,11 @@ export const api = {
   getPublicPage: (username) => request('GET', `/p/${username}`),
   trackClick:    (username, link_id) => request('POST', `/p/${username}/click`, { link_id }),
 
+  // Password
+  forgotPassword: (body)        => request('POST', '/auth/forgot-password', body),
+  resetPassword:  (body)        => request('POST', '/auth/reset-password', body),
+  changePassword: (body)        => request('PUT',  '/auth/change-password', body),
+
   // Analytics
   getAnalytics: () => request('GET', '/analytics'),
 }

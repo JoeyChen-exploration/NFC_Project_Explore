@@ -18,8 +18,9 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login"     element={<AuthPage />} />
-          <Route path="/dashboard" element={<PrivateRoute><EditorPage /></PrivateRoute>} />
+          <Route path="/login"          element={<AuthPage />} />
+          <Route path="/reset-password" element={<AuthPage />} />
+          <Route path="/dashboard"      element={<PrivateRoute><EditorPage /></PrivateRoute>} />
           <Route path="/analytics" element={<PrivateRoute><AnalyticsPage /></PrivateRoute>} />
           <Route path="/:username" element={<PublicPage />} />
           <Route path="/"          element={<Navigate to="/dashboard" replace />} />

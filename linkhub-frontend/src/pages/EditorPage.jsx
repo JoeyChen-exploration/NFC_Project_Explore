@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import ProfilePreview from '../components/ProfilePreview'
 import { THEMES, SOCIAL_LIST, SOCIAL_ICONS } from '../components/themes'
 
-const TABS = [['profile','👤','个人'],['links','🔗','链接'],['social','🌐','社交'],['embed','📦','嵌入'],['theme','🎨','主题']]
+const TABS = [['profile','👤','个人'],['links','🔗','链接'],['social','🌐','社交'],['embed','📦','嵌入'],['theme','🎨','主题'],['account','🔑','账号']]
 
 export default function EditorPage() {
   const { user, logout } = useAuth()
@@ -237,6 +237,9 @@ export default function EditorPage() {
               </div>
             </div>
           )}
+
+          {/* ── ACCOUNT ── */}
+          {tab === 'account' && <AccountTab user={user} />}
         </div>
       </div>
 
@@ -313,4 +316,75 @@ function btnStyle(bg, color) {
     background: bg, border: `1px solid #252525`, borderRadius: 7,
     padding: '5px 10px', color, fontSize: 11, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", fontWeight: 500,
   }
+}
+
+function AccountTab({ user }) {
+  const [pwd, setPwd] = useState({ currentPassword: '', newPassword: '', confirm: '' })
+  const [msg, setMsg] = useState('')
+  const [err, setErr] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const set = (k) => (e) => setPwd(p => ({ ...p, [k]: e.target.value }))
+
+  async function handleChange() {
+    setMsg(''); setErr('')
+    if (pwd.newPassword !== pwd.confirm) { setErr('两次输入的新密码不一致'); return }
+    setLoading(true)
+    try {
+      const res = await api.changePassword({ currentPassword: pwd.currentPassword, newPassword: pwd.newPassword })
+      setMsg(res.message)
+      setPwd({ currentPassword: '', newPassword: '', confirm: '' })
+    } catch (e) {
+      setErr(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {/* Account info */}
+      <div style={{ background: '#1a1a1a', borderRadius: 12, padding: 16, border: '1px solid #252525' }}>
+        <div style={{ fontSize: 11, color: '#555', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>账号信息</div>
+        <div style={{ fontSize: 13, color: '#888', marginBottom: 6 }}>用户名 <span style={{ color: '#fff', marginLeft: 8, fontWeight: 600 }}>@{user?.username}</span></div>
+        <div style={{ fontSize: 13, color: '#888' }}>邮箱 <span style={{ color: '#aaa', marginLeft: 8 }}>{user?.email}</span></div>
+      </div>
+
+      {/* Change password */}
+      <div style={{ background: '#1a1a1a', borderRadius: 12, padding: 16, border: '1px solid #252525' }}>
+        <div style={{ fontSize: 11, color: '#555', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 14 }}>修改密码</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Field label="当前密码">
+            <Input type="password" value={pwd.currentPassword} onChange={set('currentPassword')} placeholder="••••••••" />
+          </Field>
+          <Field label="新密码">
+            <Input type="password" value={pwd.newPassword} onChange={set('newPassword')} placeholder="至少 6 位" />
+          </Field>
+          <Field label="确认新密码">
+            <Input type="password" value={pwd.confirm} onChange={set('confirm')} placeholder="再输一次" />
+          </Field>
+
+          {err && (
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#f87171' }}>
+              ⚠ {err}
+            </div>
+          )}
+          {msg && (
+            <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#4ade80' }}>
+              ✓ {msg}
+            </div>
+          )}
+
+          <button onClick={handleChange} disabled={loading} style={{
+            background: 'linear-gradient(135deg,#8b5cf6,#6366f1)', border: 'none',
+            borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600,
+            cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1,
+            fontFamily: "'DM Sans',sans-serif", marginTop: 4,
+          }}>
+            {loading ? '修改中...' : '确认修改密码'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
