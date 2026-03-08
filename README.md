@@ -1,4 +1,4 @@
-# LinkHub — 个人 Link-in-Bio 主页构建器（AI Driven)
+# LinkHub — 个人 Link-in-Bio 主页构建器（AI Driven）
 
 > 让每个人都能在 60 秒内拥有自己的个性化主页。
 
