@@ -1,16 +1,21 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../hooks/useAuth'
 import ProfilePreview from '../components/ProfilePreview'
 import { THEMES, SOCIAL_LIST, SOCIAL_ICONS } from '../components/themes'
 
-const TABS = [['profile','👤','个人'],['links','🔗','链接'],['social','🌐','社交'],['embed','📦','嵌入'],['theme','🎨','主题'],['account','🔑','账号']]
+const NAV_TABS = [
+  { id: 'links',      label: 'Links' },
+  { id: 'appearance', label: 'Appearance' },
+  { id: 'analytics',  label: 'Analytics' },
+  { id: 'settings',   label: 'Settings' },
+]
 
 export default function EditorPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [tab, setTab] = useState('profile')
+  const [tab, setTab] = useState('links')
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [data, setData] = useState({
@@ -18,23 +23,18 @@ export default function EditorPage() {
     socials: { instagram: '', twitter: '', github: '', youtube: '', tiktok: '', website: '' },
     links: [],
   })
-  const nextId = useRef(Date.now())
 
-  // Load profile on mount
   useEffect(() => {
     api.getProfile().then(d => setData(d)).catch(console.error)
   }, [])
 
-  // Auto-save helper
-  const saved = (msg = '已保存 ✓') => { setSaveMsg(msg); setTimeout(() => setSaveMsg(''), 2000) }
+  const saved = (msg = '已保存') => { setSaveMsg(msg); setTimeout(() => setSaveMsg(''), 2000) }
 
-  // Profile field update + auto-save
   async function patchProfile(patch) {
-    const merged = { ...data.profile, ...patch }
-    setData(d => ({ ...d, profile: merged }))
+    setData(d => ({ ...d, profile: { ...d.profile, ...patch } }))
     setSaving(true)
     try { await api.updateProfile(patch); saved() }
-    catch (e) { saved('保存失败') }
+    catch { saved('保存失败') }
     finally { setSaving(false) }
   }
 
@@ -42,13 +42,13 @@ export default function EditorPage() {
     setData(d => ({ ...d, socials: { ...d.socials, ...patch } }))
     setSaving(true)
     try { await api.updateSocials(patch); saved() }
-    catch (e) { saved('保存失败') }
+    catch { saved('保存失败') }
     finally { setSaving(false) }
   }
 
   async function addLink() {
     try {
-      const res = await api.addLink({ label: '新链接', url: 'https://' })
+      const res = await api.addLink({ label: 'New Link', url: 'https://' })
       setData(d => ({ ...d, links: [...d.links, res.link] }))
     } catch (e) { alert(e.message) }
   }
@@ -60,7 +60,7 @@ export default function EditorPage() {
     } catch (e) { alert(e.message) }
   }
 
-  async function updateLinkField(id, field, val) {
+  function updateLinkField(id, field, val) {
     setData(d => ({ ...d, links: d.links.map(l => l.id === id ? { ...l, [field]: val } : l) }))
   }
 
@@ -69,7 +69,7 @@ export default function EditorPage() {
     if (!link) return
     setSaving(true)
     try { await api.updateLink(id, { label: link.label, url: link.url, active: link.active }); saved() }
-    catch (e) { saved('保存失败') }
+    catch { saved('保存失败') }
     finally { setSaving(false) }
   }
 
@@ -77,248 +77,371 @@ export default function EditorPage() {
     const link = data.links.find(l => l.id === id)
     const newActive = !link.active
     setData(d => ({ ...d, links: d.links.map(l => l.id === id ? { ...l, active: newActive } : l) }))
-    try { await api.updateLink(id, { active: newActive }) }
-    catch (e) { console.error(e) }
+    try { await api.updateLink(id, { active: newActive }) } catch (e) { console.error(e) }
+  }
+
+  function handleTabClick(id) {
+    if (id === 'analytics') { navigate('/analytics'); return }
+    setTab(id)
   }
 
   const previewLinks = data.links.filter(l => l.active)
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#080808', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#f4f4f5', fontFamily: "'DM Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
 
-      {/* ── LEFT PANEL ── */}
-      <div style={{ width: 380, background: '#111', borderRight: '1px solid #1e1e1e', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-
-        {/* Header */}
-        <div style={{ padding: '18px 22px 0', borderBottom: '1px solid #1e1e1e' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 18, color: '#8b5cf6' }}>⬡</span>
-              <span style={{ fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: "'DM Serif Display',serif" }}>LinkHub</span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              {saveMsg && <span style={{ fontSize: 11, color: '#22c55e' }}>{saveMsg}</span>}
-              <button onClick={() => navigate('/analytics')} style={btnStyle('#1e1e1e','#888')}>📊 分析</button>
-              <button onClick={() => window.open(`/${user?.username}`, '_blank')} style={btnStyle('#1e1e1e','#888')}>↗ 预览</button>
-              <button onClick={() => { logout(); navigate('/login') }} style={btnStyle('#1e1e1e','#555')}>退出</button>
-            </div>
+      {/* ── TOP NAV ── */}
+      <header style={{
+        background: '#fff', borderBottom: '1px solid #e5e7eb',
+        display: 'flex', alignItems: 'center', padding: '0 28px',
+        height: 56, flexShrink: 0, position: 'sticky', top: 0, zIndex: 100,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 28 }}>
+          <div style={{ width: 28, height: 28, background: '#2563eb', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>L</span>
           </div>
-
-          {/* URL display */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#1a1a1a', borderRadius: 8, marginBottom: 14 }}>
-            <span style={{ fontSize: 12, color: '#555' }}>linkhub.app/</span>
-            <span style={{ fontSize: 12, color: '#8b5cf6', fontWeight: 600 }}>{user?.username}</span>
-            <button onClick={() => navigator.clipboard.writeText(`linkhub.app/${user?.username}`)}
-              style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 11 }}>复制</button>
-          </div>
-
-          {/* Tabs */}
-          <div style={{ display: 'flex', gap: 2 }}>
-            {TABS.map(([id, icon, label]) => (
-              <button key={id} onClick={() => setTab(id)} style={{
-                flex: 1, padding: '8px 4px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                background: tab === id ? '#1e1e1e' : 'transparent',
-                color: tab === id ? '#fff' : '#555', border: 'none',
-                borderRadius: '8px 8px 0 0',
-                borderBottom: tab === id ? '2px solid #8b5cf6' : '2px solid transparent',
-                transition: 'all 0.15s', fontFamily: 'inherit',
-              }}>{icon} {label}</button>
-            ))}
-          </div>
+          <span style={{ fontSize: 16, fontWeight: 700, color: '#111', fontFamily: "'DM Serif Display', serif" }}>LinkHub</span>
         </div>
 
-        {/* Tab body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px' }}>
+        <nav style={{ display: 'flex', flex: 1 }}>
+          {NAV_TABS.map(t => (
+            <button key={t.id} onClick={() => handleTabClick(t.id)} style={{
+              height: 56, padding: '0 18px', fontSize: 14, fontWeight: 500,
+              background: 'none', border: 'none', borderBottom: tab === t.id ? '2px solid #2563eb' : '2px solid transparent',
+              color: tab === t.id ? '#2563eb' : '#6b7280', cursor: 'pointer',
+              fontFamily: "'DM Sans', sans-serif", transition: 'color 0.15s',
+            }}>{t.label}</button>
+          ))}
+        </nav>
 
-          {/* ── PROFILE ── */}
-          {tab === 'profile' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: 80, height: 80, borderRadius: '50%', margin: '0 auto 8px',
-                  border: '3px solid #8b5cf6', overflow: 'hidden', cursor: 'pointer',
-                  boxShadow: '0 0 20px #8b5cf644',
-                }} onClick={() => patchProfile({ avatar_seed: Math.floor(Math.random() * 1000) })}>
-                  <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${data.profile.avatar_seed}&backgroundColor=b6e3f4,c0aede`} alt="avatar" style={{ width: '100%', height: '100%' }} />
-                </div>
-                <div style={{ fontSize: 11, color: '#555' }}>点击随机更换</div>
-              </div>
-              <Field label="显示名称">
-                <Input value={data.profile.name} onChange={e => setData(d => ({ ...d, profile: { ...d.profile, name: e.target.value } }))}
-                  onBlur={e => patchProfile({ name: e.target.value })} placeholder="你的名字" />
-              </Field>
-              <Field label="个人简介">
-                <textarea value={data.profile.bio}
-                  onChange={e => setData(d => ({ ...d, profile: { ...d.profile, bio: e.target.value } }))}
-                  onBlur={e => patchProfile({ bio: e.target.value })}
-                  placeholder="用一句话介绍自己..." rows={3}
-                  style={{ ...inputBase, resize: 'none', lineHeight: 1.6 }} />
-              </Field>
-            </div>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {saveMsg && <span style={{ fontSize: 12, color: saving ? '#f59e0b' : '#22c55e' }}>{saveMsg}</span>}
+          <button
+            onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${user?.username}`); saved('链接已复制') }}
+            style={navBtnStyle}>
+            <ShareIcon /> Share
+          </button>
+          <div style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', border: '2px solid #e5e7eb', cursor: 'pointer' }}
+            onClick={() => { logout(); navigate('/login') }} title="点击退出登录">
+            <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${data.profile.avatar_seed}&backgroundColor=b6e3f4,c0aede`}
+              alt="avatar" style={{ width: '100%', height: '100%' }} />
+          </div>
+        </div>
+      </header>
 
-          {/* ── LINKS ── */}
-          {tab === 'links' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {data.links.map(link => (
-                <div key={link.id} style={{ background: '#1a1a1a', borderRadius: 12, padding: 14, border: '1px solid #252525' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <Toggle on={link.active} onClick={() => toggleLink(link.id)} />
-                    <button onClick={() => removeLink(link.id)} style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>×</button>
+      {/* ── MAIN ── */}
+      <div style={{
+        flex: 1, display: 'flex', maxWidth: 1160, width: '100%',
+        margin: '0 auto', padding: '32px 24px', gap: 32, boxSizing: 'border-box',
+      }}>
+
+        {/* LEFT */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {tab === 'links' && (<>
+            {/* Profile card */}
+            <Card>
+              <SectionTitle>Profile</SectionTitle>
+              <div style={{ display: 'flex', gap: 20, marginTop: 16 }}>
+                {/* Avatar with edit button */}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', border: '2px solid #e5e7eb' }}>
+                    <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${data.profile.avatar_seed}&backgroundColor=b6e3f4,c0aede`}
+                      alt="avatar" style={{ width: '100%', height: '100%' }} />
                   </div>
-                  <Input value={link.label}
-                    onChange={e => updateLinkField(link.id, 'label', e.target.value)}
-                    onBlur={() => saveLink(link.id)}
-                    placeholder="链接标题" style={{ marginBottom: 8 }} />
-                  <Input value={link.url}
-                    onChange={e => updateLinkField(link.id, 'url', e.target.value)}
-                    onBlur={() => saveLink(link.id)}
-                    placeholder="https://..." />
+                  <button onClick={() => patchProfile({ avatar_seed: Math.floor(Math.random() * 1000) })}
+                    title="点击换头像"
+                    style={{
+                      position: 'absolute', bottom: 0, right: 0,
+                      width: 24, height: 24, borderRadius: '50%',
+                      background: '#2563eb', border: '2px solid #fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', padding: 0,
+                    }}>
+                    <PencilIcon />
+                  </button>
                 </div>
-              ))}
-              <DashedBtn onClick={addLink}>+ 添加链接</DashedBtn>
-            </div>
-          )}
 
-          {/* ── SOCIAL ── */}
-          {tab === 'social' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {SOCIAL_LIST.map(s => (
-                <Field key={s} label={<span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{SOCIAL_ICONS[s]('#8b5cf6')}<span style={{ textTransform: 'capitalize' }}>{s}</span></span>}>
-                  <Input value={data.socials[s]}
-                    onChange={e => setData(d => ({ ...d, socials: { ...d.socials, [s]: e.target.value } }))}
-                    onBlur={e => patchSocials({ [s]: e.target.value })}
-                    placeholder={s === 'website' ? 'https://...' : '@用户名'} />
-                </Field>
-              ))}
-            </div>
-          )}
-
-          {/* ── EMBED ── */}
-          {tab === 'embed' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ background: '#1a1a1a', borderRadius: 12, padding: 16, border: '1px solid #252525' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>嵌入小组件</span>
-                  <Toggle on={data.profile.show_embed} onClick={() => patchProfile({ show_embed: !data.profile.show_embed })} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <FormField label="PROFILE TITLE">
+                    <LightInput value={data.profile.name}
+                      onChange={e => setData(d => ({ ...d, profile: { ...d.profile, name: e.target.value } }))}
+                      onBlur={e => patchProfile({ name: e.target.value })}
+                      placeholder="@yourname" />
+                  </FormField>
+                  <FormField label="BIO">
+                    <textarea value={data.profile.bio}
+                      onChange={e => setData(d => ({ ...d, profile: { ...d.profile, bio: e.target.value } }))}
+                      onBlur={e => patchProfile({ bio: e.target.value })}
+                      placeholder="Tell the world about yourself..." rows={3}
+                      style={{ ...lightInputBase, resize: 'none', lineHeight: 1.6 }} />
+                  </FormField>
                 </div>
-                <Field label="Embed URL (iframe src)">
-                  <Input value={data.profile.embed_url}
-                    onChange={e => setData(d => ({ ...d, profile: { ...d.profile, embed_url: e.target.value } }))}
-                    onBlur={e => patchProfile({ embed_url: e.target.value })}
-                    placeholder="Spotify / YouTube embed URL" />
-                </Field>
               </div>
-              <div style={{ background: '#181510', border: '1px solid #2e2510', borderRadius: 12, padding: 14 }}>
-                <div style={{ fontSize: 12, color: '#a0882a', fontWeight: 600, marginBottom: 8 }}>💡 支持平台</div>
-                {['Spotify 播放器','YouTube 视频','Notion 页面','任何支持 iframe 的页面'].map(t => (
-                  <div key={t} style={{ fontSize: 12, color: '#6b5a2e', marginBottom: 4 }}>· {t}</div>
+            </Card>
+
+            {/* Links card */}
+            <Card>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <SectionTitle style={{ marginBottom: 0 }}>Links</SectionTitle>
+                <button onClick={addLink} style={bluePillBtn}>+ Add New Link</button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {data.links.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af', fontSize: 14 }}>
+                    还没有链接，点击「Add New Link」开始添加
+                  </div>
+                )}
+                {data.links.map(link => (
+                  <div key={link.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: link.active ? '#fff' : '#f9fafb',
+                    border: '1px solid #e5e7eb', borderRadius: 12,
+                    padding: '12px 14px',
+                    opacity: link.active ? 1 : 0.55,
+                    transition: 'opacity 0.2s',
+                  }}>
+                    <div style={{ color: '#d1d5db', flexShrink: 0 }}><DragIcon /></div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <input value={link.label}
+                        onChange={e => updateLinkField(link.id, 'label', e.target.value)}
+                        onBlur={() => saveLink(link.id)}
+                        style={{ ...inlineInput, fontWeight: 600, fontSize: 14, color: link.active ? '#111' : '#9ca3af' }}
+                        placeholder="Link title" />
+                      <input value={link.url}
+                        onChange={e => updateLinkField(link.id, 'url', e.target.value)}
+                        onBlur={() => saveLink(link.id)}
+                        style={{ ...inlineInput, fontSize: 12, color: link.active ? '#2563eb' : '#9ca3af', marginTop: 2 }}
+                        placeholder="https://..." />
+                    </div>
+
+                    <Toggle on={link.active} onClick={() => toggleLink(link.id)} />
+
+                    <button onClick={() => removeLink(link.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', padding: 4, display: 'flex', lineHeight: 1 }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                      onMouseLeave={e => e.currentTarget.style.color = '#d1d5db'}>
+                      <TrashIcon />
+                    </button>
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
+            </Card>
+          </>)}
 
-          {/* ── THEME ── */}
-          {tab === 'theme' && (
-            <div>
-              <div style={{ fontSize: 11, color: '#555', marginBottom: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>选择主题</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {tab === 'appearance' && (<>
+            <Card>
+              <SectionTitle>主题</SectionTitle>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 16 }}>
                 {THEMES.map(t => (
                   <div key={t.id} onClick={() => patchProfile({ theme_id: t.id })} style={{
                     borderRadius: 12, overflow: 'hidden', cursor: 'pointer',
-                    border: data.profile.theme_id === t.id ? '2px solid #8b5cf6' : '2px solid transparent',
-                    boxShadow: data.profile.theme_id === t.id ? '0 0 16px #8b5cf655' : 'none',
+                    border: data.profile.theme_id === t.id ? '2px solid #2563eb' : '2px solid #e5e7eb',
+                    boxShadow: data.profile.theme_id === t.id ? '0 0 0 3px #dbeafe' : 'none',
                     transition: 'all 0.2s',
                   }}>
-                    <div style={{ height: 56, background: t.bg }} />
-                    <div style={{ background: '#1a1a1a', padding: '6px 10px', fontSize: 12, fontWeight: 600, color: data.profile.theme_id === t.id ? '#8b5cf6' : '#555' }}>{t.label}</div>
+                    <div style={{ height: 52, background: t.bg }} />
+                    <div style={{ background: '#fff', padding: '6px 10px', fontSize: 12, fontWeight: 600, color: data.profile.theme_id === t.id ? '#2563eb' : '#6b7280' }}>
+                      {t.label}
+                    </div>
                   </div>
                 ))}
               </div>
+            </Card>
+
+            <Card>
+              <SectionTitle>社交账号</SectionTitle>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 }}>
+                {SOCIAL_LIST.map(s => (
+                  <FormField key={s} label={
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {SOCIAL_ICONS[s]('#2563eb')}
+                      <span style={{ textTransform: 'capitalize' }}>{s}</span>
+                    </span>
+                  }>
+                    <LightInput value={data.socials[s]}
+                      onChange={e => setData(d => ({ ...d, socials: { ...d.socials, [s]: e.target.value } }))}
+                      onBlur={e => patchSocials({ [s]: e.target.value })}
+                      placeholder={s === 'website' ? 'https://...' : '@用户名'} />
+                  </FormField>
+                ))}
+              </div>
+            </Card>
+
+            <Card>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <SectionTitle style={{ marginBottom: 0 }}>嵌入组件</SectionTitle>
+                <Toggle on={data.profile.show_embed} onClick={() => patchProfile({ show_embed: !data.profile.show_embed })} />
+              </div>
+              <FormField label="Embed URL (iframe src)">
+                <LightInput value={data.profile.embed_url}
+                  onChange={e => setData(d => ({ ...d, profile: { ...d.profile, embed_url: e.target.value } }))}
+                  onBlur={e => patchProfile({ embed_url: e.target.value })}
+                  placeholder="Spotify / YouTube embed URL" />
+              </FormField>
+            </Card>
+          </>)}
+
+          {tab === 'settings' && <SettingsTab user={user} />}
+        </div>
+
+        {/* RIGHT: Phone Preview */}
+        <div style={{ width: 290, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ position: 'sticky', top: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            {/* Phone */}
+            <div style={{
+              width: 270, borderRadius: 44,
+              background: '#1a2035',
+              padding: '10px 8px 14px',
+              boxShadow: '0 32px 80px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+                <div style={{ width: 68, height: 18, background: '#111827', borderRadius: '0 0 12px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 38, height: 4, background: '#374151', borderRadius: 2 }} />
+                </div>
+              </div>
+              <div style={{ height: 490, borderRadius: 32, overflow: 'hidden' }}>
+                <ProfilePreview data={{ ...data, links: previewLinks }} />
+              </div>
             </div>
-          )}
 
-          {/* ── ACCOUNT ── */}
-          {tab === 'account' && <AccountTab user={user} />}
-        </div>
-      </div>
-
-      {/* ── RIGHT: Phone Preview ── */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080808', position: 'relative' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 50%, rgba(139,92,246,0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{
-          width: 360, height: 680, borderRadius: 44,
-          overflow: 'hidden', position: 'relative',
-          boxShadow: '0 40px 120px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06)',
-          border: '8px solid #1a1a1a',
-        }}>
-          {/* Notch */}
-          <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 100, height: 28, background: '#1a1a1a', borderRadius: '0 0 16px 16px', zIndex: 10, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 5 }}>
-            <div style={{ width: 56, height: 5, background: '#2a2a2a', borderRadius: 3 }} />
-          </div>
-          <div style={{ paddingTop: 28, height: '100%' }}>
-            <ProfilePreview data={{ ...data, links: previewLinks }} />
+            <div style={{ marginTop: 14, fontSize: 12, color: '#9ca3af', textAlign: 'center' }}>
+              linkhub.app/<span style={{ color: '#2563eb', fontWeight: 600 }}>{user?.username}</span>
+            </div>
+            <button onClick={() => window.open(`/${user?.username}`, '_blank')}
+              style={{ ...navBtnStyle, marginTop: 10, width: '100%', justifyContent: 'center' }}>
+              ↗ 打开公开主页
+            </button>
           </div>
         </div>
-        <div style={{ position: 'absolute', bottom: 28, fontSize: 11, color: '#2a2a2a', letterSpacing: '0.5px', fontFamily: 'monospace' }}>
-          实时预览 · 失焦自动保存
-        </div>
+
       </div>
     </div>
   )
 }
 
-// ── Shared mini components ──
-const inputBase = {
-  width: '100%', boxSizing: 'border-box',
-  background: '#1e1e1e', border: '1px solid #2a2a2a',
-  borderRadius: 8, padding: '9px 12px',
-  color: '#fff', fontSize: 13, outline: 'none', fontFamily: "'DM Sans',sans-serif",
+// ── Small Components ──
+
+function Card({ children }) {
+  return (
+    <div style={{
+      background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb',
+      padding: '20px 22px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    }}>{children}</div>
+  )
 }
 
-function Input({ style, ...props }) {
-  return <input style={{ ...inputBase, ...style }} {...props} />
+function SectionTitle({ children, style }) {
+  return <div style={{ fontSize: 16, fontWeight: 700, color: '#111', ...style }}>{children}</div>
 }
 
-function Field({ label, children }) {
+function FormField({ label, children }) {
   return (
     <div>
-      <div style={{ fontSize: 11, color: '#555', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+      <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 6, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{label}</div>
       {children}
     </div>
   )
 }
 
+const lightInputBase = {
+  width: '100%', boxSizing: 'border-box',
+  background: '#f9fafb', border: '1px solid #e5e7eb',
+  borderRadius: 8, padding: '9px 12px',
+  color: '#111', fontSize: 14, outline: 'none',
+  fontFamily: "'DM Sans', sans-serif",
+}
+
+function LightInput({ onBlur, ...props }) {
+  return (
+    <input
+      style={lightInputBase}
+      onFocus={e => e.target.style.borderColor = '#2563eb'}
+      onBlur={e => { e.target.style.borderColor = '#e5e7eb'; onBlur?.(e) }}
+      {...props}
+    />
+  )
+}
+
 function Toggle({ on, onClick }) {
   return (
-    <div onClick={onClick} style={{ width: 36, height: 20, borderRadius: 10, cursor: 'pointer', background: on ? '#8b5cf6' : '#2a2a2a', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
-      <div style={{ position: 'absolute', top: 3, left: on ? 17 : 3, width: 14, height: 14, borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
+    <div onClick={onClick} style={{
+      width: 40, height: 22, borderRadius: 11, cursor: 'pointer',
+      background: on ? '#2563eb' : '#d1d5db',
+      position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+    }}>
+      <div style={{
+        position: 'absolute', top: 3, left: on ? 19 : 3,
+        width: 16, height: 16, borderRadius: '50%',
+        background: '#fff', transition: 'left 0.2s',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+      }} />
     </div>
   )
 }
 
-function DashedBtn({ onClick, children }) {
+const inlineInput = {
+  display: 'block', width: '100%', border: 'none', outline: 'none',
+  background: 'transparent', fontFamily: "'DM Sans', sans-serif", padding: '1px 0',
+}
+
+const bluePillBtn = {
+  background: '#2563eb', color: '#fff', border: 'none',
+  borderRadius: 20, padding: '8px 18px', fontSize: 13, fontWeight: 600,
+  cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+}
+
+const navBtnStyle = {
+  display: 'flex', alignItems: 'center', gap: 6,
+  background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8,
+  padding: '6px 14px', fontSize: 13, fontWeight: 600, color: '#374151',
+  cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+}
+
+// ── Icons ──
+function PencilIcon() {
   return (
-    <button onClick={onClick} style={{
-      background: 'none', border: '2px dashed #2a2a2a',
-      borderRadius: 12, padding: 12, color: '#444',
-      cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif",
-      transition: 'all 0.15s', width: '100%',
-    }}
-      onMouseEnter={e => { e.target.style.borderColor = '#8b5cf6'; e.target.style.color = '#8b5cf6' }}
-      onMouseLeave={e => { e.target.style.borderColor = '#2a2a2a'; e.target.style.color = '#444' }}
-    >{children}</button>
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z" />
+    </svg>
   )
 }
 
-function btnStyle(bg, color) {
-  return {
-    background: bg, border: `1px solid #252525`, borderRadius: 7,
-    padding: '5px 10px', color, fontSize: 11, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", fontWeight: 500,
-  }
+function DragIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+      <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+      <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+    </svg>
+  )
 }
 
-function AccountTab({ user }) {
+function TrashIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14H6L5 6"/>
+      <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+    </svg>
+  )
+}
+
+function ShareIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+    </svg>
+  )
+}
+
+// ── Settings Tab ──
+function SettingsTab({ user }) {
   const [pwd, setPwd] = useState({ currentPassword: '', newPassword: '', confirm: '' })
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
@@ -342,49 +465,51 @@ function AccountTab({ user }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      {/* Account info */}
-      <div style={{ background: '#1a1a1a', borderRadius: 12, padding: 16, border: '1px solid #252525' }}>
-        <div style={{ fontSize: 11, color: '#555', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>账号信息</div>
-        <div style={{ fontSize: 13, color: '#888', marginBottom: 6 }}>用户名 <span style={{ color: '#fff', marginLeft: 8, fontWeight: 600 }}>@{user?.username}</span></div>
-        <div style={{ fontSize: 13, color: '#888' }}>邮箱 <span style={{ color: '#aaa', marginLeft: 8 }}>{user?.email}</span></div>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <Card>
+        <SectionTitle>账号信息</SectionTitle>
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: '1px solid #f3f4f6' }}>
+            <span style={{ fontSize: 14, color: '#6b7280' }}>用户名</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>@{user?.username}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0' }}>
+            <span style={{ fontSize: 14, color: '#6b7280' }}>邮箱</span>
+            <span style={{ fontSize: 14, color: '#374151' }}>{user?.email}</span>
+          </div>
+        </div>
+      </Card>
 
-      {/* Change password */}
-      <div style={{ background: '#1a1a1a', borderRadius: 12, padding: 16, border: '1px solid #252525' }}>
-        <div style={{ fontSize: 11, color: '#555', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 14 }}>修改密码</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Field label="当前密码">
-            <Input type="password" value={pwd.currentPassword} onChange={set('currentPassword')} placeholder="••••••••" />
-          </Field>
-          <Field label="新密码">
-            <Input type="password" value={pwd.newPassword} onChange={set('newPassword')} placeholder="至少 6 位" />
-          </Field>
-          <Field label="确认新密码">
-            <Input type="password" value={pwd.confirm} onChange={set('confirm')} placeholder="再输一次" />
-          </Field>
+      <Card>
+        <SectionTitle>修改密码</SectionTitle>
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <FormField label="当前密码">
+            <LightInput type="password" value={pwd.currentPassword} onChange={set('currentPassword')} placeholder="••••••••" />
+          </FormField>
+          <FormField label="新密码">
+            <LightInput type="password" value={pwd.newPassword} onChange={set('newPassword')} placeholder="至少 6 位" />
+          </FormField>
+          <FormField label="确认新密码">
+            <LightInput type="password" value={pwd.confirm} onChange={set('confirm')} placeholder="再输一次" />
+          </FormField>
 
           {err && (
-            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#f87171' }}>
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626' }}>
               ⚠ {err}
             </div>
           )}
           {msg && (
-            <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#4ade80' }}>
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#16a34a' }}>
               ✓ {msg}
             </div>
           )}
 
-          <button onClick={handleChange} disabled={loading} style={{
-            background: 'linear-gradient(135deg,#8b5cf6,#6366f1)', border: 'none',
-            borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600,
-            cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1,
-            fontFamily: "'DM Sans',sans-serif", marginTop: 4,
-          }}>
+          <button onClick={handleChange} disabled={loading}
+            style={{ ...bluePillBtn, borderRadius: 8, padding: '11px', opacity: loading ? 0.6 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
             {loading ? '修改中...' : '确认修改密码'}
           </button>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
