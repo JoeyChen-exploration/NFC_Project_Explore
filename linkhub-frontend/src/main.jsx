@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import './styles/apple.css';
 import './styles/minimalism.css';
 import './styles/textures.css';
+import './styles/dashboard-design-system.css';
 
 // 使用懒加载提高初始加载速度
 const AuthPage = lazy(() => import('./pages/AuthPage'));
