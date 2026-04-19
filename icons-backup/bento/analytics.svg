@@ -1,0 +1,33 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 极致克制的分析图标 - 图表 -->
+  <rect width="64" height="64" fill="white"/>
+  
+  <!-- 图表坐标轴 -->
+  <path d="M20 44L20 20L44 20" stroke="black" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 数据点1 -->
+  <circle cx="24" cy="36" r="2" fill="black"/>
+  <path d="M24 36L28 32" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 数据点2 -->
+  <circle cx="28" cy="32" r="2" fill="black"/>
+  <path d="M28 32L32 28" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 数据点3 -->
+  <circle cx="32" cy="28" r="2" fill="black"/>
+  <path d="M32 28L36 24" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 数据点4 -->
+  <circle cx="36" cy="24" r="2" fill="black"/>
+  <path d="M36 24L40 32" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 数据点5 -->
+  <circle cx="40" cy="32" r="2" fill="black"/>
+  
+  <!-- 增长箭头 -->
+  <path d="M48 24L52 20L56 24" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M52 20L52 32" stroke="black" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 图表填充区域 -->
+  <path d="M24 36L28 32L32 28L36 24L40 32L44 32L44 44L20 44Z" fill="black" fill-opacity="0.1"/>
+</svg>

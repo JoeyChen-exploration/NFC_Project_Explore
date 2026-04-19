@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 极致克制的铅笔图标 -->
+  <rect width="32" height="32" fill="white"/>
+  
+  <!-- 铅笔主体 -->
+  <path d="M22 10L24 12L14 22L12 20L22 10Z" stroke="black" stroke-width="2" stroke-linejoin="round" fill="white"/>
+  
+  <!-- 铅笔尖 -->
+  <path d="M10 24L12 22L14 24L12 26L10 24Z" stroke="black" stroke-width="2" stroke-linejoin="round" fill="white"/>
+  
+  <!-- 橡皮擦 -->
+  <rect x="22" y="8" width="2" height="4" rx="1" fill="black"/>
+</svg>

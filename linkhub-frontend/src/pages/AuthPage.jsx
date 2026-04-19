@@ -1,216 +1,355 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { api } from '../api'
-import { useAuth } from '../hooks/useAuth'
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { api } from '../api';
+import { useAuth } from '../hooks/useAuth';
+
+function MinimalInput({ type = 'text', placeholder, value, onChange, onKeyDown, autoComplete }) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      onKeyDown={onKeyDown}
+      placeholder={placeholder}
+      autoComplete={autoComplete}
+      className="input-minimal"
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        padding: '13px 16px',
+        fontSize: 15,
+        border: '1px solid var(--gray-200)',
+        borderRadius: 8,
+        backgroundColor: 'var(--white)',
+        color: 'var(--gray-900)',
+        fontFamily: 'var(--font-ui)',
+        transition: 'border-color 0.15s',
+        outline: 'none',
+      }}
+      onFocus={e => {
+        e.target.style.borderColor = 'var(--black)';
+        e.target.style.boxShadow = '0 0 0 3px rgba(0,0,0,0.06)';
+      }}
+      onBlur={e => {
+        e.target.style.borderColor = 'var(--gray-200)';
+        e.target.style.boxShadow = 'none';
+      }}
+    />
+  );
+}
 
 export default function AuthPage() {
-  const [searchParams] = useSearchParams()
-  const [mode, setMode] = useState('login')
-  const [form, setForm] = useState({ email: '', username: '', password: '', token: '', newPassword: '' })
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [devUrl, setDevUrl] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState('login');
+  const [form, setForm] = useState({
+    email: '',
+    username: '',
+    password: '',
+    token: '',
+    newPassword: '',
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [devUrl, setDevUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = searchParams.get('token')
-    if (token) { setMode('reset'); setForm(f => ({ ...f, token })) }
-  }, [searchParams])
+    const token = searchParams.get('token');
+    if (token) {
+      setMode('reset');
+      setForm(f => ({ ...f, token }));
+    }
+  }, [searchParams]);
 
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
-  const switchMode = (m) => { setMode(m); setError(''); setSuccess(''); setDevUrl('') }
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+  const switchMode = m => {
+    setMode(m);
+    setError('');
+    setSuccess('');
+    setDevUrl('');
+  };
 
   async function handleSubmit() {
-    setError(''); setSuccess(''); setDevUrl('')
-    setLoading(true)
+    setError('');
+    setSuccess('');
+    setDevUrl('');
+    setLoading(true);
     try {
       if (mode === 'login') {
-        const data = await api.login({ email: form.email, password: form.password })
-        login(data.token, data.user)
-        navigate('/dashboard')
+        const data = await api.login({ email: form.email, password: form.password });
+        login(data.token, data.user);
+        navigate('/dashboard');
       } else if (mode === 'register') {
-        const data = await api.register({ email: form.email, username: form.username, password: form.password })
-        login(data.token, data.user)
-        navigate('/dashboard')
+        const data = await api.register({
+          email: form.email,
+          username: form.username,
+          password: form.password,
+        });
+        login(data.token, data.user);
+        navigate('/dashboard');
       } else if (mode === 'forgot') {
-        const data = await api.forgotPassword({ email: form.email })
-        setSuccess(data.message)
-        if (data.dev_reset_url) setDevUrl(data.dev_reset_url)
+        const data = await api.forgotPassword({ email: form.email });
+        setSuccess(data.message);
+        if (data.dev_reset_url) setDevUrl(data.dev_reset_url);
       } else if (mode === 'reset') {
-        const data = await api.resetPassword({ token: form.token, newPassword: form.newPassword })
-        setSuccess(data.message)
-        setTimeout(() => switchMode('login'), 2000)
+        const data = await api.resetPassword({ token: form.token, newPassword: form.newPassword });
+        setSuccess(data.message);
+        setTimeout(() => switchMode('login'), 2000);
       }
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  const onEnter = (e) => e.key === 'Enter' && handleSubmit()
+  const onEnter = e => e.key === 'Enter' && handleSubmit();
 
-  const titles = { login: '欢迎回来', register: '创建你的主页', forgot: '重置密码', reset: '设置新密码' }
-  const subtitles = {
-    login: '登录以继续编辑你的个人主页',
-    register: '30 秒创建你的专属 link-in-bio 主页',
-    forgot: '输入账号邮箱，我们将发送重置链接',
-    reset: '输入新密码完成重置',
-  }
+  const titles = {
+    login: 'Sign in',
+    register: 'Get started',
+    forgot: 'Reset password',
+    reset: 'New password',
+  };
+  const btnLabels = {
+    login: 'Continue',
+    register: 'Create account',
+    forgot: 'Send link',
+    reset: 'Confirm',
+  };
 
   return (
-    <div style={s.root}>
-      <div style={s.card}>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: 'var(--white)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        fontFamily: 'var(--font-ui)',
+      }}
+    >
+      <div key={mode} style={{ width: '100%', maxWidth: 400, animation: 'scaleIn 0.22s both' }}>
         {/* Logo */}
-        <div style={s.logo}>
-          <div style={s.logoBox}><span style={{ color: '#fff', fontSize: 14, fontWeight: 700 }}>L</span></div>
-          <span style={s.logoText}>LinkHub</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 48 }}>
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 7,
+              background: 'var(--black)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span style={{ color: '#fff', fontSize: 13, fontWeight: 700, lineHeight: 1 }}>L</span>
+          </div>
+          <span
+            style={{
+              fontSize: 16,
+              fontWeight: 700,
+              color: 'var(--gray-900)',
+              letterSpacing: '-0.3px',
+            }}
+          >
+            LinkHub
+          </span>
         </div>
 
-        <h1 style={s.title}>{titles[mode]}</h1>
-        <p style={s.subtitle}>{subtitles[mode]}</p>
+        {/* Title */}
+        <h1
+          style={{
+            fontSize: 30,
+            fontWeight: 700,
+            fontFamily: 'var(--font-display)',
+            color: 'var(--gray-900)',
+            margin: '0 0 36px',
+            letterSpacing: '-0.5px',
+          }}
+        >
+          {titles[mode]}
+        </h1>
 
-        <div style={s.form}>
+        {/* Form */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {(mode === 'login' || mode === 'register' || mode === 'forgot') && (
-            <Field label="邮箱">
-              <input style={s.input} type="email" value={form.email} onChange={set('email')}
-                placeholder="hello@example.com" onKeyDown={onEnter}
-                onFocus={e => e.target.style.borderColor = '#2563eb'}
-                onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
-            </Field>
+            <MinimalInput
+              placeholder="Email"
+              type="email"
+              value={form.email}
+              onChange={set('email')}
+              onKeyDown={onEnter}
+              autoComplete="email"
+            />
           )}
 
           {mode === 'register' && (
-            <Field label="用户名">
-              <div style={{ position: 'relative' }}>
-                <span style={s.inputPrefix}>linkhub.app/</span>
-                <input style={{ ...s.input, paddingLeft: 108 }} value={form.username} onChange={set('username')}
-                  placeholder="yourname" onKeyDown={onEnter}
-                  onFocus={e => e.target.style.borderColor = '#2563eb'}
-                  onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
-              </div>
-            </Field>
+            <MinimalInput
+              placeholder="Username"
+              value={form.username}
+              onChange={set('username')}
+              onKeyDown={onEnter}
+              autoComplete="username"
+            />
           )}
 
           {(mode === 'login' || mode === 'register') && (
-            <Field label="密码">
-              <input style={s.input} type="password" value={form.password} onChange={set('password')}
-                placeholder={mode === 'register' ? '至少 6 位' : '••••••••'} onKeyDown={onEnter}
-                onFocus={e => e.target.style.borderColor = '#2563eb'}
-                onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
-            </Field>
+            <MinimalInput
+              type="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={set('password')}
+              onKeyDown={onEnter}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            />
           )}
 
-          {mode === 'reset' && (<>
-            <Field label="重置码">
-              <input style={s.input} value={form.token} onChange={set('token')}
-                placeholder="粘贴重置链接中的 token" onKeyDown={onEnter}
-                onFocus={e => e.target.style.borderColor = '#2563eb'}
-                onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
-            </Field>
-            <Field label="新密码">
-              <input style={s.input} type="password" value={form.newPassword} onChange={set('newPassword')}
-                placeholder="至少 6 位" onKeyDown={onEnter}
-                onFocus={e => e.target.style.borderColor = '#2563eb'}
-                onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
-            </Field>
-          </>)}
+          {mode === 'reset' && (
+            <>
+              <MinimalInput
+                placeholder="Reset code"
+                value={form.token}
+                onChange={set('token')}
+                onKeyDown={onEnter}
+              />
+              <MinimalInput
+                type="password"
+                placeholder="New password"
+                value={form.newPassword}
+                onChange={set('newPassword')}
+                onKeyDown={onEnter}
+                autoComplete="new-password"
+              />
+            </>
+          )}
 
-          {error && <div style={s.error}>⚠ {error}</div>}
+          {error && (
+            <div
+              style={{
+                background: 'var(--gray-50)',
+                border: '1px solid var(--gray-200)',
+                borderRadius: 8,
+                padding: '10px 14px',
+                fontSize: 13,
+                color: 'var(--c-error)',
+              }}
+            >
+              {error}
+            </div>
+          )}
 
           {success && (
-            <div style={s.successBox}>
-              <div>✓ {success}</div>
+            <div
+              style={{
+                background: 'var(--gray-50)',
+                border: '1px solid var(--gray-200)',
+                borderRadius: 8,
+                padding: '12px 14px',
+                fontSize: 13,
+                color: 'var(--c-success)',
+                lineHeight: 1.6,
+              }}
+            >
+              <div>{success}</div>
               {devUrl && (
-                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #bbf7d0', fontSize: 12 }}>
-                  <div style={{ color: '#16a34a', fontWeight: 600, marginBottom: 6 }}>开发模式 · 重置链接：</div>
-                  <a href={devUrl} style={{ color: '#15803d', wordBreak: 'break-all', fontSize: 11 }}>{devUrl}</a>
+                <div
+                  style={{
+                    marginTop: 8,
+                    paddingTop: 8,
+                    borderTop: '1px solid var(--gray-200)',
+                    fontSize: 11,
+                  }}
+                >
+                  <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--gray-500)' }}>
+                    Dev · Reset link:
+                  </div>
+                  <a
+                    href={devUrl}
+                    style={{ color: 'inherit', wordBreak: 'break-all', opacity: 0.8 }}
+                  >
+                    {devUrl}
+                  </a>
                 </div>
               )}
             </div>
           )}
 
           {!success && (
-            <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} onClick={handleSubmit} disabled={loading}>
-              {loading ? '处理中...' : { login: '登录', register: '注册并开始', forgot: '发送重置链接', reset: '确认重置密码' }[mode]}
+            <button
+              className="btn-primary"
+              onClick={handleSubmit}
+              disabled={loading}
+              style={{
+                width: '100%',
+                background: 'var(--black)',
+                color: 'var(--white)',
+                border: 'none',
+                borderRadius: 8,
+                padding: '14px',
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontFamily: 'var(--font-ui)',
+                opacity: loading ? 0.5 : 1,
+                letterSpacing: '-0.2px',
+                marginTop: 4,
+              }}
+            >
+              {loading ? '...' : btnLabels[mode]}
             </button>
           )}
 
           {mode === 'login' && (
-            <div style={{ textAlign: 'right', marginTop: -6 }}>
-              <button style={s.link} onClick={() => switchMode('forgot')}>忘记密码？</button>
+            <div style={{ textAlign: 'right' }}>
+              <button style={linkBtn} onClick={() => switchMode('forgot')}>
+                Forgot password?
+              </button>
             </div>
           )}
         </div>
 
-        <div style={s.switchRow}>
-          {mode === 'login' && <span style={{ color: '#6b7280' }}>还没有账号？<button style={s.link} onClick={() => switchMode('register')}>免费注册</button></span>}
-          {mode === 'register' && <span style={{ color: '#6b7280' }}>已有账号？<button style={s.link} onClick={() => switchMode('login')}>登录</button></span>}
-          {(mode === 'forgot' || mode === 'reset') && <button style={s.link} onClick={() => switchMode('login')}>← 返回登录</button>}
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: 28, fontSize: 14, color: 'var(--gray-500)' }}>
+          {mode === 'login' && (
+            <span>
+              No account?{' '}
+              <button style={linkBtn} onClick={() => switchMode('register')}>
+                Sign up
+              </button>
+            </span>
+          )}
+          {mode === 'register' && (
+            <span>
+              Have an account?{' '}
+              <button style={linkBtn} onClick={() => switchMode('login')}>
+                Sign in
+              </button>
+            </span>
+          )}
+          {(mode === 'forgot' || mode === 'reset') && (
+            <button style={linkBtn} onClick={() => switchMode('login')}>
+              ← Back to sign in
+            </button>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-function Field({ label, children }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.6px' }}>{label}</label>
-      {children}
-    </div>
-  )
-}
-
-const s = {
-  root: {
-    minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: '#f4f4f5', padding: 20, fontFamily: "'DM Sans', sans-serif",
-  },
-  card: {
-    width: '100%', maxWidth: 420,
-    background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20,
-    padding: '40px 36px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-  },
-  logo: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 },
-  logoBox: {
-    width: 28, height: 28, background: '#2563eb', borderRadius: 8,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  logoText: { fontSize: 18, fontWeight: 700, fontFamily: 'DM Serif Display, serif', color: '#111' },
-  title: { fontSize: 26, fontWeight: 700, color: '#111', marginBottom: 6, marginTop: 0, fontFamily: "'DM Serif Display', serif" },
-  subtitle: { fontSize: 14, color: '#6b7280', marginBottom: 28, lineHeight: 1.6, marginTop: 0 },
-  form: { display: 'flex', flexDirection: 'column', gap: 16 },
-  input: {
-    width: '100%', boxSizing: 'border-box',
-    background: '#f9fafb', border: '1px solid #e5e7eb',
-    borderRadius: 8, padding: '10px 14px',
-    color: '#111', fontSize: 14, fontFamily: "'DM Sans', sans-serif",
-    outline: 'none', transition: 'border-color 0.2s',
-  },
-  inputPrefix: {
-    position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
-    fontSize: 13, color: '#9ca3af', pointerEvents: 'none',
-  },
-  error: {
-    background: '#fef2f2', border: '1px solid #fecaca',
-    borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626',
-  },
-  successBox: {
-    background: '#f0fdf4', border: '1px solid #bbf7d0',
-    borderRadius: 8, padding: '12px 14px', fontSize: 13, color: '#16a34a', lineHeight: 1.6,
-  },
-  btn: {
-    background: '#2563eb', border: 'none',
-    borderRadius: 8, padding: '12px', color: '#fff', fontSize: 15, fontWeight: 600,
-    cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", marginTop: 4,
-    transition: 'opacity 0.2s',
-  },
-  switchRow: { textAlign: 'center', marginTop: 22, fontSize: 14 },
-  link: {
-    background: 'none', border: 'none', color: '#2563eb',
-    cursor: 'pointer', fontSize: 14, fontFamily: "'DM Sans', sans-serif", fontWeight: 600, marginLeft: 4,
-  },
-}
+const linkBtn = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--gray-900)',
+  cursor: 'pointer',
+  fontSize: 14,
+  fontFamily: 'var(--font-ui)',
+  fontWeight: 500,
+  padding: 0,
+  textDecoration: 'underline',
+  textUnderlineOffset: '2px',
+};

@@ -1,0 +1,174 @@
+/* ===== 极致克制纹理系统 ===== */
+/* 使用CSS创建轻量级纹理，避免图像加载 */
+
+/* 1. 微妙噪声纹理 */
+.texture-noise-subtle {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(0,0,0,0.02) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, rgba(0,0,0,0.02) 2px, transparent 2px);
+  background-size: 64px 64px;
+  background-position: 0 0, 32px 32px;
+}
+
+/* 2. 网格纹理 */
+.texture-grid-minimal {
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* 3. 点阵纹理 */
+.texture-dots-subtle {
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* 4. 线条纹理 */
+.texture-lines-minimal {
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.02) 3px,
+      rgba(0,0,0,0.02) 4px
+    );
+}
+
+/* 5. 渐变噪声 */
+.texture-gradient-noise {
+  background: 
+    linear-gradient(90deg, 
+      rgba(255,255,255,1) 0%, 
+      rgba(250,250,250,1) 50%, 
+      rgba(255,255,255,1) 100%
+    ),
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px;
+  background-blend-mode: overlay;
+}
+
+/* 6. 纸张纹理 */
+.texture-paper-subtle {
+  background-color: #fafafa;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23000000' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+/* 7. 斜线纹理 */
+.texture-diagonal-lines {
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(0,0,0,0.02) 10px,
+      rgba(0,0,0,0.02) 20px
+    );
+}
+
+/* 8. 圆形渐变 */
+.texture-circle-gradient {
+  background: 
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(0,0,0,0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(0,0,0,0.03) 0%,
+      transparent 50%
+    );
+  background-color: #ffffff;
+}
+
+/* 9. 条纹纹理 */
+.texture-stripes-subtle {
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.02) 2px,
+      rgba(0,0,0,0.02) 4px
+    );
+}
+
+/* 10. 混合纹理 */
+.texture-blend-minimal {
+  background: 
+    linear-gradient(135deg, rgba(0,0,0,0.01) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(0,0,0,0.01) 25%, transparent 25%),
+    linear-gradient(45deg, rgba(0,0,0,0.01) 25%, transparent 25%),
+    linear-gradient(315deg, rgba(0,0,0,0.01) 25%, transparent 25%);
+  background-position: 0 0, 16px 0, 16px -16px, 0px 16px;
+  background-size: 32px 32px;
+}
+
+/* 纹理应用类 */
+.texture-card {
+  composes: texture-noise-subtle;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--r-md);
+}
+
+.texture-background {
+  composes: texture-paper-subtle;
+}
+
+.texture-accent {
+  composes: texture-diagonal-lines;
+}
+
+.texture-highlight {
+  composes: texture-circle-gradient;
+}
+
+/* 纹理工具类 */
+.texture-opacity-10 { opacity: 0.1; }
+.texture-opacity-20 { opacity: 0.2; }
+.texture-opacity-30 { opacity: 0.3; }
+
+.texture-blur-sm { backdrop-filter: blur(4px); }
+.texture-blur-md { backdrop-filter: blur(8px); }
+.texture-blur-lg { backdrop-filter: blur(16px); }
+
+/* 纹理动画 */
+@keyframes texture-shift {
+  0% { background-position: 0 0; }
+  100% { background-position: 64px 64px; }
+}
+
+.texture-animated {
+  animation: texture-shift 20s linear infinite;
+}
+
+/* 响应式纹理 */
+@media (max-width: 768px) {
+  .texture-grid-minimal {
+    background-size: 24px 24px;
+  }
+  
+  .texture-dots-subtle {
+    background-size: 12px 12px;
+  }
+}
+
+/* 打印优化 */
+@media print {
+  .texture-noise-subtle,
+  .texture-grid-minimal,
+  .texture-dots-subtle,
+  .texture-lines-minimal,
+  .texture-gradient-noise,
+  .texture-paper-subtle,
+  .texture-diagonal-lines,
+  .texture-circle-gradient,
+  .texture-stripes-subtle,
+  .texture-blend-minimal {
+    background: none !important;
+  }
+}

@@ -1,0 +1,19 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 极致克制的个人资料图标 - 简约人形 -->
+  <rect width="64" height="64" fill="white"/>
+  
+  <!-- 头部 -->
+  <circle cx="32" cy="20" r="8" stroke="black" stroke-width="2" fill="white"/>
+  
+  <!-- 身体 -->
+  <path d="M32 28L32 44" stroke="black" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 手臂 -->
+  <path d="M22 32L42 32" stroke="black" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 腿部 -->
+  <path d="M32 44L26 54M32 44L38 54" stroke="black" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 细节：领口 -->
+  <path d="M28 28L36 28" stroke="black" stroke-width="1" stroke-linecap="round"/>
+</svg>
