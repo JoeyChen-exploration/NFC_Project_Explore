@@ -12,7 +12,7 @@ const EditorPage = lazy(() => import('./pages/EditorPage'));
 const PublicPage = lazy(() => import('./pages/PublicPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const FrontendShowcasePage = lazy(() => import('./pages/FrontendShowcasePage'));
-const NfcFocusedDashboard = lazy(() => import('./pages/NfcFocusedDashboard'));
+const OptimizedDashboardV2 = lazy(() => import('./pages/OptimizedDashboardV2'));
 
 // 只在开发环境导入测试页面
 let TestResponsive = null;
@@ -77,7 +77,7 @@ function App() {
               path="/dashboard"
               element={
                 <PrivateRoute>
-                  <NfcFocusedDashboard />
+                  <OptimizedDashboardV2 />
                 </PrivateRoute>
               }
             />
