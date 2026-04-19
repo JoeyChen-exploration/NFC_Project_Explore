@@ -13,7 +13,7 @@ const EditorPage = lazy(() => import('./pages/EditorPage'));
 const PublicPage = lazy(() => import('./pages/PublicPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const FrontendShowcasePage = lazy(() => import('./pages/FrontendShowcasePage'));
-const OptimizedDashboardV2 = lazy(() => import('./pages/OptimizedDashboardV2'));
+const SimpleDashboard = lazy(() => import('./pages/SimpleDashboard'));
 
 // 只在开发环境导入测试页面
 let TestResponsive = null;
@@ -78,7 +78,7 @@ function App() {
               path="/dashboard"
               element={
                 <PrivateRoute>
-                  <OptimizedDashboardV2 />
+                  <SimpleDashboard />
                 </PrivateRoute>
               }
             />
