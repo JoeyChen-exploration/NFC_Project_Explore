@@ -5,6 +5,8 @@ import { useI18n } from '../../hooks/useI18n';
 export default function LinkList({
   links,
   onAdd,
+  onQuickAdd,
+  quickAddPresets = [],
   onRemove,
   onUpdate,
   onSave,
@@ -83,6 +85,35 @@ export default function LinkList({
           </button>
         </div>
       </div>
+
+      {quickAddPresets.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--mono-text-muted)',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              marginBottom: 8,
+            }}
+          >
+            {tc('快速添加', 'Quick Add')}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {quickAddPresets.map(preset => (
+              <button
+                key={preset.id}
+                onClick={() => onQuickAdd?.(preset)}
+                style={quickAddBtn}
+                title={preset.url}
+              >
+                + {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* batch action bar */}
       {selectMode && (
@@ -249,6 +280,18 @@ export default function LinkList({
 }
 
 const batchBtn = {
+  background: 'rgba(255,255,255,0.84)',
+  border: '1px solid rgba(15, 15, 15, 0.12)',
+  borderRadius: 999,
+  padding: '7px 12px',
+  fontSize: 12,
+  color: 'var(--mono-text)',
+  cursor: 'pointer',
+  fontFamily: 'var(--font-ui)',
+  fontWeight: 600,
+};
+
+const quickAddBtn = {
   background: 'rgba(255,255,255,0.84)',
   border: '1px solid rgba(15, 15, 15, 0.12)',
   borderRadius: 999,

@@ -199,6 +199,17 @@ export default function EditorPage() {
     }
   }
 
+  async function addPresetLink(preset) {
+    try {
+      const res = await api.addLink({ label: preset.label, url: preset.url });
+      setData(current => ({ ...current, links: [...current.links, res.link] }));
+      setNewLinkId(res.link.id);
+      saved(tc('预设链接已添加', 'Preset link added'));
+    } catch (error) {
+      window.alert(error.message);
+    }
+  }
+
   async function removeLink(id) {
     try {
       await api.deleteLink(id);
@@ -310,6 +321,17 @@ export default function EditorPage() {
     settings: tc('账号设置', 'Account'),
   };
 
+  const quickAddPresets = [
+    { id: 'instagram', label: 'Instagram', url: 'https://instagram.com/yourname' },
+    { id: 'facebook', label: 'Facebook', url: 'https://facebook.com/yourname' },
+    { id: 'whatsapp', label: 'WhatsApp', url: 'https://wa.me/1234567890' },
+    { id: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com/in/yourname' },
+    { id: 'x', label: 'X', url: 'https://x.com/yourname' },
+    { id: 'youtube', label: 'YouTube', url: 'https://youtube.com/@yourname' },
+    { id: 'tiktok', label: 'TikTok', url: 'https://tiktok.com/@yourname' },
+    { id: 'website', label: tc('官网', 'Website'), url: 'https://your-site.com' },
+  ];
+
   const leftPanel =
     tab === null ? (
       <section className="mono-panel">
@@ -354,6 +376,8 @@ export default function EditorPage() {
             <LinkList
               links={data.links}
               onAdd={addLink}
+              onQuickAdd={addPresetLink}
+              quickAddPresets={quickAddPresets}
               onRemove={removeLink}
               onUpdate={updateLinkField}
               onSave={saveLink}
