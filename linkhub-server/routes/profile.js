@@ -55,6 +55,10 @@ router.get('/', (req, res) => {
 
     const profiles = query('SELECT * FROM profiles WHERE user_id = ?', [userId]);
     const socials = query('SELECT * FROM socials WHERE user_id = ?', [userId]);
+    const publishedProfiles = query(
+      'SELECT user_id, published_at FROM published_profiles WHERE user_id = ?',
+      [userId],
+    );
     const links = query(
       'SELECT * FROM links WHERE user_id = ? ORDER BY sort_order ASC, created_at ASC',
       [userId],
@@ -62,6 +66,7 @@ router.get('/', (req, res) => {
 
     const profile = profiles[0] || {};
     const social = socials[0] || {};
+    const publishedProfile = publishedProfiles[0] || {};
 
     res.json({
       profile: {
@@ -88,10 +93,129 @@ router.get('/', (req, res) => {
         active: !!l.active,
         sort_order: l.sort_order,
       })),
+      publish: {
+        has_published_snapshot: !!publishedProfile.user_id,
+        last_published_at: publishedProfile.published_at || null,
+      },
     });
   } catch (err) {
     console.error('Get profile error:', err);
     res.status(500).json({ error: '获取资料失败' });
+  }
+});
+
+// GET /api/profile/publish/status
+router.get('/publish/status', (req, res) => {
+  try {
+    const userId = req.user.id;
+    const rows = query('SELECT user_id, published_at FROM published_profiles WHERE user_id = ?', [
+      userId,
+    ]);
+    const published = rows[0] || {};
+    res.json({
+      has_published_snapshot: !!published.user_id,
+      last_published_at: published.published_at || null,
+    });
+  } catch (err) {
+    console.error('Get publish status error:', err);
+    res.status(500).json({ error: '获取发布状态失败' });
+  }
+});
+
+// POST /api/profile/publish
+router.post('/publish', (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const profiles = query('SELECT * FROM profiles WHERE user_id = ?', [userId]);
+    const socials = query('SELECT * FROM socials WHERE user_id = ?', [userId]);
+    const links = query(
+      'SELECT * FROM links WHERE user_id = ? ORDER BY sort_order ASC, created_at ASC',
+      [userId],
+    );
+
+    const profile = profiles[0] || {};
+    const social = socials[0] || {};
+
+    transaction(({ run }) => {
+      run(
+        `INSERT INTO published_profiles (
+          user_id, name, bio, avatar_seed, avatar_url, theme_id, embed_url, show_embed, published_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(user_id) DO UPDATE SET
+          name = excluded.name,
+          bio = excluded.bio,
+          avatar_seed = excluded.avatar_seed,
+          avatar_url = excluded.avatar_url,
+          theme_id = excluded.theme_id,
+          embed_url = excluded.embed_url,
+          show_embed = excluded.show_embed,
+          published_at = datetime('now')`,
+        [
+          userId,
+          profile.name || '',
+          profile.bio || '',
+          profile.avatar_seed || 1,
+          profile.avatar_url || '',
+          profile.theme_id || 'midnight',
+          profile.embed_url || '',
+          profile.show_embed ? 1 : 0,
+        ],
+      );
+
+      run(
+        `INSERT INTO published_socials (
+          user_id, instagram, twitter, github, youtube, tiktok, website, published_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(user_id) DO UPDATE SET
+          instagram = excluded.instagram,
+          twitter = excluded.twitter,
+          github = excluded.github,
+          youtube = excluded.youtube,
+          tiktok = excluded.tiktok,
+          website = excluded.website,
+          published_at = datetime('now')`,
+        [
+          userId,
+          social.instagram || '',
+          social.twitter || '',
+          social.github || '',
+          social.youtube || '',
+          social.tiktok || '',
+          social.website || '',
+        ],
+      );
+
+      run('DELETE FROM published_links WHERE user_id = ?', [userId]);
+      links.forEach(link => {
+        run(
+          `INSERT INTO published_links (
+            id, user_id, label, url, active, sort_order, created_at, published_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+          [
+            link.id,
+            userId,
+            link.label || '',
+            link.url || '',
+            link.active ? 1 : 0,
+            link.sort_order || 0,
+            link.created_at || null,
+          ],
+        );
+      });
+    });
+
+    const publishedRows = query('SELECT published_at FROM published_profiles WHERE user_id = ?', [
+      userId,
+    ]);
+
+    res.json({
+      message: '已发布到公开页',
+      last_published_at: publishedRows[0]?.published_at || null,
+    });
+  } catch (err) {
+    console.error('Publish profile error:', err);
+    res.status(500).json({ error: '发布失败，请稍后重试' });
   }
 });
 
@@ -225,12 +349,10 @@ router.post('/links', (req, res) => {
       sortOrder,
     ]);
 
-    res
-      .status(201)
-      .json({
-        message: '链接已添加',
-        link: { id, label, url, active: true, sort_order: sortOrder },
-      });
+    res.status(201).json({
+      message: '链接已添加',
+      link: { id, label, url, active: true, sort_order: sortOrder },
+    });
   } catch (err) {
     console.error('Add link error:', err);
     res.status(500).json({ error: '添加失败' });

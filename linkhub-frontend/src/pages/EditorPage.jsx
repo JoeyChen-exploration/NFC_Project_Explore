@@ -187,6 +187,7 @@ export default function EditorPage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastPublishedAt, setLastPublishedAt] = useState(null);
   const [data, setData] = useState({
     profile: {
       name: '',
@@ -204,8 +205,13 @@ export default function EditorPage() {
     api
       .getProfile()
       .then(result => {
-        setData(result);
-        setHasUnsavedChanges(false);
+        setData({
+          profile: result.profile,
+          socials: result.socials,
+          links: result.links,
+        });
+        setLastPublishedAt(result.publish?.last_published_at || null);
+        setHasUnsavedChanges(!result.publish?.has_published_snapshot);
       })
       .catch(console.error);
   }, []);
@@ -331,6 +337,7 @@ export default function EditorPage() {
           link.id in map ? { ...link, active: map[link.id] } : link,
         ),
       }));
+      setHasUnsavedChanges(true);
     } catch (error) {
       console.error(error);
     }
@@ -343,12 +350,13 @@ export default function EditorPage() {
         ...current,
         links: current.links.filter(link => !ids.includes(link.id)),
       }));
+      setHasUnsavedChanges(true);
     } catch (error) {
       console.error(error);
     }
   }
 
-  async function saveAllChanges() {
+  async function publishChanges() {
     setSaving(true);
     try {
       const { profile, socials, links } = data;
@@ -377,17 +385,29 @@ export default function EditorPage() {
         ),
       );
 
+      const publishResult = await api.publishProfile();
       setHasUnsavedChanges(false);
-      saved(tc('已同步到公开页', 'Synced to public page'));
+      setLastPublishedAt(publishResult.last_published_at || null);
+      saved(tc('已发布到公开页', 'Published to public page'));
     } catch (error) {
-      saved(tc('同步失败', 'Sync failed'));
+      saved(tc('发布失败', 'Publish failed'));
       window.alert(
-        error.message || tc('保存失败，请检查输入格式', 'Save failed, check input format'),
+        error.message || tc('发布失败，请检查输入格式', 'Publish failed, check input format'),
       );
     } finally {
       setSaving(false);
     }
   }
+
+  const publishedMeta = lastPublishedAt
+    ? tc(
+        `上次发布 ${new Date(lastPublishedAt).toLocaleString('zh-CN')}`,
+        `Published ${new Date(lastPublishedAt).toLocaleString()}`,
+      )
+    : tc(
+        '尚未发布，公开页可能仍是旧版本',
+        'Not published yet. Public page may still show old data',
+      );
 
   const currentTheme = THEMES.find(item => item.id === data.profile.theme_id);
   const tiles = [
@@ -564,12 +584,13 @@ export default function EditorPage() {
         actions={
           <>
             {saveMsg && <span className="mono-badge">{saving ? `${saveMsg}...` : saveMsg}</span>}
-            <button className="mono-btn" onClick={saveAllChanges} disabled={saving}>
+            <span className="mono-badge">{publishedMeta}</span>
+            <button className="mono-btn" onClick={publishChanges} disabled={saving}>
               {saving
-                ? tc('同步中...', 'Syncing...')
+                ? tc('发布中...', 'Publishing...')
                 : hasUnsavedChanges
-                  ? tc('保存更改', 'Save changes')
-                  : tc('保持同步', 'Up to date')}
+                  ? tc('发布更改', 'Publish changes')
+                  : tc('已发布', 'Published')}
             </button>
             <button
               className="mono-btn-ghost"

@@ -72,6 +72,10 @@ router.post('/register', async (req, res) => {
       // Create empty socials record
       run('INSERT INTO socials (user_id) VALUES (?)', [id]);
 
+      // Create initial published snapshot
+      run('INSERT INTO published_profiles (user_id, name) VALUES (?, ?)', [id, username]);
+      run('INSERT INTO published_socials (user_id) VALUES (?)', [id]);
+
       // 提交事务
       run('COMMIT');
     } catch (err) {

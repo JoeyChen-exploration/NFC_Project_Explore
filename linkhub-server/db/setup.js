@@ -91,6 +91,46 @@ function createTables() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS published_profiles (
+      user_id TEXT PRIMARY KEY REFERENCES users(id),
+      name TEXT DEFAULT '',
+      bio TEXT DEFAULT '',
+      avatar_seed INTEGER DEFAULT 1,
+      avatar_url TEXT DEFAULT '',
+      theme_id TEXT DEFAULT 'midnight',
+      embed_url TEXT DEFAULT '',
+      show_embed INTEGER DEFAULT 0,
+      published_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS published_socials (
+      user_id TEXT PRIMARY KEY REFERENCES users(id),
+      instagram TEXT DEFAULT '',
+      twitter TEXT DEFAULT '',
+      github TEXT DEFAULT '',
+      youtube TEXT DEFAULT '',
+      tiktok TEXT DEFAULT '',
+      website TEXT DEFAULT '',
+      published_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS published_links (
+      id TEXT PRIMARY KEY,
+      user_id TEXT REFERENCES users(id),
+      label TEXT NOT NULL,
+      url TEXT NOT NULL,
+      active INTEGER DEFAULT 1,
+      sort_order INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      published_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS analytics (
       id TEXT PRIMARY KEY,
       user_id TEXT REFERENCES users(id),
@@ -129,6 +169,34 @@ function createTables() {
   // 创建索引以提高查询性能
   createIndexes();
 
+  // Backfill published snapshot for existing users (idempotent)
+  db.run(`
+    INSERT OR IGNORE INTO published_profiles (
+      user_id, name, bio, avatar_seed, avatar_url, theme_id, embed_url, show_embed
+    )
+    SELECT
+      p.user_id, p.name, p.bio, p.avatar_seed, p.avatar_url, p.theme_id, p.embed_url, p.show_embed
+    FROM profiles p
+  `);
+
+  db.run(`
+    INSERT OR IGNORE INTO published_socials (
+      user_id, instagram, twitter, github, youtube, tiktok, website
+    )
+    SELECT
+      s.user_id, s.instagram, s.twitter, s.github, s.youtube, s.tiktok, s.website
+    FROM socials s
+  `);
+
+  db.run(`
+    INSERT OR IGNORE INTO published_links (
+      id, user_id, label, url, active, sort_order, created_at
+    )
+    SELECT
+      l.id, l.user_id, l.label, l.url, l.active, l.sort_order, l.created_at
+    FROM links l
+  `);
+
   saveDb();
   console.log('✅ Database tables ready');
 }
@@ -153,6 +221,12 @@ function createIndexes() {
   db.run('CREATE INDEX IF NOT EXISTS idx_nfc_cards_serial ON nfc_cards(card_serial)');
   db.run('CREATE INDEX IF NOT EXISTS idx_nfc_scans_card_id ON nfc_scans(card_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_nfc_scans_created_at ON nfc_scans(created_at)');
+
+  // Published snapshot indexes
+  db.run('CREATE INDEX IF NOT EXISTS idx_published_links_user_id ON published_links(user_id)');
+  db.run(
+    'CREATE INDEX IF NOT EXISTS idx_published_links_user_sort ON published_links(user_id, sort_order)',
+  );
 
   console.log('✅ Database indexes created');
 }

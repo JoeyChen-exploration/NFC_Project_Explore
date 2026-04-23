@@ -68,6 +68,8 @@ export const api = {
   getProfile: () => request('GET', '/profile'),
   updateProfile: body => request('PUT', '/profile', body),
   updateSocials: body => request('PUT', '/profile/socials', body),
+  getPublishStatus: () => request('GET', '/profile/publish/status'),
+  publishProfile: () => request('POST', '/profile/publish'),
   uploadAvatar: async file => {
     const formData = new FormData();
     formData.append('avatar', file);

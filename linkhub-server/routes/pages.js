@@ -47,12 +47,26 @@ router.get('/:username', (req, res) => {
 
     const userId = users[0].id;
 
-    const profiles = query('SELECT * FROM profiles WHERE user_id = ?', [userId]);
-    const socials = query('SELECT * FROM socials WHERE user_id = ?', [userId]);
-    const links = query(
-      'SELECT * FROM links WHERE user_id = ? AND active = 1 ORDER BY sort_order ASC',
+    const publishedProfiles = query('SELECT * FROM published_profiles WHERE user_id = ?', [userId]);
+    const publishedSocials = query('SELECT * FROM published_socials WHERE user_id = ?', [userId]);
+    const publishedLinks = query(
+      'SELECT * FROM published_links WHERE user_id = ? AND active = 1 ORDER BY sort_order ASC',
       [userId],
     );
+
+    // Fallback for legacy data: if no published snapshot exists yet, read draft tables.
+    const shouldFallbackToDraft = publishedProfiles.length === 0;
+    const profiles = shouldFallbackToDraft
+      ? query('SELECT * FROM profiles WHERE user_id = ?', [userId])
+      : publishedProfiles;
+    const socials = shouldFallbackToDraft
+      ? query('SELECT * FROM socials WHERE user_id = ?', [userId])
+      : publishedSocials;
+    const links = shouldFallbackToDraft
+      ? query('SELECT * FROM links WHERE user_id = ? AND active = 1 ORDER BY sort_order ASC', [
+          userId,
+        ])
+      : publishedLinks;
 
     const profile = profiles[0] || {};
     const social = socials[0] || {};
