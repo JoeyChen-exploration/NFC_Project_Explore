@@ -7,6 +7,7 @@ export default function LinkList({
   onAdd,
   onQuickAdd,
   quickAddPresets = [],
+  socials = {},
   onRemove,
   onUpdate,
   onSave,
@@ -109,6 +110,21 @@ export default function LinkList({
                 title={preset.url}
               >
                 + {preset.label}
+                {preset.socialKey && (
+                  <span
+                    style={{
+                      marginLeft: 6,
+                      fontSize: 10,
+                      opacity: 0.65,
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {socials[preset.socialKey]
+                      ? tc('icon已设', 'icon set')
+                      : tc('可做icon', 'icon')}
+                  </span>
+                )}
               </button>
             ))}
           </div>

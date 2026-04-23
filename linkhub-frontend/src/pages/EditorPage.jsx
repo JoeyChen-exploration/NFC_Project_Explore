@@ -204,7 +204,12 @@ export default function EditorPage() {
       const res = await api.addLink({ label: preset.label, url: preset.url });
       setData(current => ({ ...current, links: [...current.links, res.link] }));
       setNewLinkId(res.link.id);
-      saved(tc('预设链接已添加', 'Preset link added'));
+      const hasSocialValue = preset.socialKey && (data.socials?.[preset.socialKey] || '').trim();
+      saved(
+        hasSocialValue
+          ? tc('预设链接已添加（该平台已在社交 icon 中）', 'Preset added (already in social icons)')
+          : tc('预设链接已添加', 'Preset link added'),
+      );
     } catch (error) {
       window.alert(error.message);
     }
@@ -322,14 +327,24 @@ export default function EditorPage() {
   };
 
   const quickAddPresets = [
-    { id: 'instagram', label: 'Instagram', url: 'https://instagram.com/yourname' },
+    {
+      id: 'instagram',
+      label: 'Instagram',
+      url: 'https://instagram.com/yourname',
+      socialKey: 'instagram',
+    },
     { id: 'facebook', label: 'Facebook', url: 'https://facebook.com/yourname' },
     { id: 'whatsapp', label: 'WhatsApp', url: 'https://wa.me/1234567890' },
     { id: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com/in/yourname' },
-    { id: 'x', label: 'X', url: 'https://x.com/yourname' },
-    { id: 'youtube', label: 'YouTube', url: 'https://youtube.com/@yourname' },
-    { id: 'tiktok', label: 'TikTok', url: 'https://tiktok.com/@yourname' },
-    { id: 'website', label: tc('官网', 'Website'), url: 'https://your-site.com' },
+    { id: 'x', label: 'X', url: 'https://x.com/yourname', socialKey: 'twitter' },
+    { id: 'youtube', label: 'YouTube', url: 'https://youtube.com/@yourname', socialKey: 'youtube' },
+    { id: 'tiktok', label: 'TikTok', url: 'https://tiktok.com/@yourname', socialKey: 'tiktok' },
+    {
+      id: 'website',
+      label: tc('官网', 'Website'),
+      url: 'https://your-site.com',
+      socialKey: 'website',
+    },
   ];
 
   const leftPanel =
@@ -378,6 +393,7 @@ export default function EditorPage() {
               onAdd={addLink}
               onQuickAdd={addPresetLink}
               quickAddPresets={quickAddPresets}
+              socials={data.socials}
               onRemove={removeLink}
               onUpdate={updateLinkField}
               onSave={saveLink}
