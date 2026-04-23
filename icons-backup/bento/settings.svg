@@ -1,0 +1,28 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 极致克制的设置图标 - 齿轮 -->
+  <rect width="64" height="64" fill="white"/>
+  
+  <!-- 主齿轮 -->
+  <circle cx="32" cy="32" r="16" stroke="black" stroke-width="2" fill="white"/>
+  
+  <!-- 齿轮齿1 -->
+  <rect x="30" y="12" width="4" height="8" rx="1" fill="black"/>
+  
+  <!-- 齿轮齿2 -->
+  <rect x="46" y="30" width="8" height="4" rx="1" fill="black"/>
+  
+  <!-- 齿轮齿3 -->
+  <rect x="30" y="44" width="4" height="8" rx="1" fill="black"/>
+  
+  <!-- 齿轮齿4 -->
+  <rect x="12" y="30" width="8" height="4" rx="1" fill="black"/>
+  
+  <!-- 对角齿轮齿 -->
+  <rect x="40" y="18" width="4" height="8" rx="1" transform="rotate(45 40 18)" fill="black"/>
+  <rect x="40" y="38" width="4" height="8" rx="1" transform="rotate(-45 40 38)" fill="black"/>
+  <rect x="24" y="18" width="4" height="8" rx="1" transform="rotate(-45 24 18)" fill="black"/>
+  <rect x="24" y="38" width="4" height="8" rx="1" transform="rotate(45 24 38)" fill="black"/>
+  
+  <!-- 中心孔 -->
+  <circle cx="32" cy="32" r="4" stroke="black" stroke-width="1.5" fill="white"/>
+</svg>

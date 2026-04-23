@@ -6,7 +6,13 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "test": "node test.js"
+    "test": "node test.js",
+    "security-check": "node scripts/security-check.js",
+    "prestart": "node scripts/security-check.js",
+    "lint": "eslint . --ext .js --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write \"**/*.js\"",
+    "format:check": "prettier --check \"**/*.js\""
   },
   "keywords": [],
   "author": "",
@@ -14,10 +20,24 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
+    "dompurify": "^3.4.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "helmet": "^8.1.0",
+    "jsdom": "^29.0.2",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
     "sql.js": "^1.14.1",
     "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

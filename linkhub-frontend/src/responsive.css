@@ -1,0 +1,109 @@
+/* 响应式设计断点 */
+:root {
+  /* 断点定义 */
+  --breakpoint-mobile: 768px;
+  --breakpoint-tablet: 1024px;
+  --breakpoint-desktop: 1280px;
+  
+  /* 移动端优化变量 */
+  --touch-target-min: 44px;
+  --mobile-padding: 16px;
+  --mobile-gap: 12px;
+}
+
+/* 移动端优化基础样式 */
+@media (max-width: 768px) {
+  /* 全局调整 */
+  body {
+    font-size: 14px;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* 触摸目标优化 */
+  button, 
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  .btn {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+    padding: 12px 16px;
+  }
+  
+  /* 输入框优化 */
+  input, 
+  textarea, 
+  select {
+    font-size: 16px; /* 防止iOS缩放 */
+    padding: 12px;
+  }
+  
+  /* 链接优化 */
+  a {
+    min-height: var(--touch-target-min);
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* 平板设备 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* 中等屏幕优化 */
+}
+
+/* 桌面设备 */
+@media (min-width: 1025px) {
+  /* 大屏幕优化 */
+}
+
+/* 实用类 */
+.mobile-only {
+  display: none !important;
+}
+
+.desktop-only {
+  display: block !important;
+}
+
+.tablet-only {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block !important;
+  }
+  
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tablet-only {
+    display: block !important;
+  }
+  
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* 触摸反馈优化 */
+.touch-feedback {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.touch-feedback:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* 移动端安全区域支持 */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top);
+}

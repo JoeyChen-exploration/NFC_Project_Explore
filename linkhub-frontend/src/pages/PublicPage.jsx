@@ -1,59 +1,75 @@
-import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { api } from '../api'
-import ProfilePreview from '../components/ProfilePreview'
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { api } from '../api';
+import ProfilePreview from '../components/ProfilePreview';
+import { AppShell, AppTopbar } from '../components/AppShell';
 
 export default function PublicPage() {
-  const { username } = useParams()
-  const [data, setData] = useState(null)
-  const [error, setError] = useState(null)
+  const { username } = useParams();
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    api.getPublicPage(username)
+    api
+      .getPublicPage(username)
       .then(setData)
-      .catch(e => setError(e.message))
-  }, [username])
+      .catch(err => setError(err.message || '页面加载失败'));
+  }, [username]);
 
   function handleLinkClick(linkId) {
-    api.trackClick(username, linkId).catch(() => {})
+    api.trackClick(username, linkId).catch(() => {});
   }
 
-  if (error) return (
-    <div style={{
-      minHeight: '100vh', background: '#080808',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'DM Sans', sans-serif", color: '#555',
-    }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>404</div>
-      <div style={{ fontSize: 16, marginBottom: 8 }}>找不到用户 <strong style={{ color: '#8b5cf6' }}>@{username}</strong></div>
-      <div style={{ fontSize: 13, color: '#3a3a3a' }}>也许他们还没注册？</div>
-      <a href="/login" style={{ marginTop: 24, fontSize: 13, color: '#8b5cf6', textDecoration: 'none' }}>创建你自己的主页 →</a>
-    </div>
-  )
+  if (error) {
+    return (
+      <AppShell>
+        <AppTopbar title="LinkHub" subtitle="Public page" />
+        <div className="mono-public-wrap mono-empty">
+          <div className="mono-panel" style={{ maxWidth: 520 }}>
+            <div className="mono-kicker">404</div>
+            <h1 style={{ margin: '12px 0 8px', fontSize: '2.4rem', letterSpacing: '-0.06em' }}>
+              @{username} 还没有公开主页
+            </h1>
+            <p className="mono-copy" style={{ margin: '0 auto 20px' }}>
+              {error}
+            </p>
+            <a className="mono-btn" href="/login" style={{ textDecoration: 'none' }}>
+              创建你的页面
+            </a>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
-  if (!data) return (
-    <div style={{
-      minHeight: '100vh', background: '#080808',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'DM Sans', sans-serif",
-    }}>
-      <div style={{ display: 'flex', gap: 6 }}>
-        {[0,1,2].map(i => (
-          <div key={i} style={{
-            width: 8, height: 8, borderRadius: '50%', background: '#333',
-            animation: `pulse 1.2s ${i * 0.2}s ease-in-out infinite`,
-          }} />
-        ))}
-      </div>
-      <style>{`@keyframes pulse { 0%,100%{opacity:.2} 50%{opacity:1} }`}</style>
-    </div>
-  )
+  if (!data) {
+    return (
+      <AppShell>
+        <AppTopbar title="LinkHub" subtitle="Loading public profile" />
+        <div className="mono-public-wrap mono-empty">
+          <div className="mono-panel" style={{ textAlign: 'center', width: 320 }}>
+            <div className="loading-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div className="mono-note" style={{ marginTop: 12 }}>
+              正在加载 @{username} 的主页...
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1 }}>
-        <ProfilePreview data={data} onLinkClick={handleLinkClick} />
+    <AppShell>
+      <AppTopbar title={data.profile?.name || `@${username}`} subtitle={`@${username}`} />
+      <div className="mono-public-wrap">
+        <div className="mono-public-card">
+          <ProfilePreview data={data} onLinkClick={handleLinkClick} />
+        </div>
       </div>
-    </div>
-  )
+    </AppShell>
+  );
 }

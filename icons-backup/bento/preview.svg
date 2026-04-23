@@ -1,0 +1,20 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 极致克制的预览图标 - 眼睛/屏幕 -->
+  <rect width="64" height="64" fill="white"/>
+  
+  <!-- 屏幕外框 -->
+  <rect x="16" y="16" width="32" height="24" rx="4" stroke="black" stroke-width="2" fill="white"/>
+  
+  <!-- 屏幕内容 -->
+  <rect x="20" y="20" width="24" height="16" rx="2" fill="black" fill-opacity="0.1"/>
+  
+  <!-- 眼睛瞳孔 -->
+  <circle cx="32" cy="28" r="4" stroke="black" stroke-width="1.5" fill="white"/>
+  
+  <!-- 眼睛高光 -->
+  <circle cx="34" cy="26" r="1" fill="white"/>
+  
+  <!-- 底座 -->
+  <path d="M24 40L40 40" stroke="black" stroke-width="2" stroke-linecap="round"/>
+  <path d="M28 40L28 44L36 44L36 40" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

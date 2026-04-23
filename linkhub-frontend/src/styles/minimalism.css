@@ -1,0 +1,421 @@
+/* ── Minimalism Design System ────────────────────────────────────────────── */
+/* Imported after apple.css — overrides color/radius/shadow tokens globally   */
+
+:root {
+  /* ── Grayscale palette ── */
+  --black:    #000000;
+  --white:    #ffffff;
+  --gray-50:  #fafafa;
+  --gray-100: #f5f5f5;
+  --gray-200: #e5e5e5;
+  --gray-300: #d4d4d4;
+  --gray-400: #a3a3a3;
+  --gray-500: #737373;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
+
+  /* ── Override apple.css tokens → monochrome ── */
+  --c-bg:           #f8f8f8;
+  --c-surface:      #ffffff;
+  --c-surface-2:    #f5f5f5;
+  --c-text:         #0a0a0a;
+  --c-text-2:       #525252;
+  --c-text-3:       #a3a3a3;
+  --c-accent:       #0a0a0a;
+  --c-accent-hover: #262626;
+  --c-border:       #e5e5e5;
+  --c-border-light: #f0f0f0;
+  --c-success:      #16a34a;
+  --c-error:        #dc2626;
+  --c-warning:      #d97706;
+
+  /* ── Lighter shadows ── */
+  --s-xs: 0 1px 2px rgba(0,0,0,0.03);
+  --s-sm: 0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.03);
+  --s-md: 0 4px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+  --s-lg: 0 8px 28px rgba(0,0,0,0.08);
+  --s-xl: 0 16px 48px rgba(0,0,0,0.10);
+
+  /* ── Tighter radius ── */
+  --r-sm:  3px;
+  --r-md:  6px;
+  --r-lg:  8px;
+  --r-xl:  10px;
+  --r-2xl: 12px;
+
+  /* ── Spacing scale ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ── Transition ── */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition:      250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+
+body {
+  background-color: var(--white);
+  color: var(--gray-900);
+}
+
+/* ── Override blue-tinted focus glow ─────────────────────────────────────── */
+
+input:focus, textarea:focus, select:focus {
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.07) !important;
+}
+
+/* ── Override btn-primary blue glow ──────────────────────────────────────── */
+
+.btn-primary:hover:not(:disabled) {
+  filter: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.16);
+}
+
+/* ── Minimal input (auth page) ───────────────────────────────────────────── */
+
+.input-minimal {
+  outline: none;
+  font-family: var(--font-ui);
+}
+.input-minimal::placeholder {
+  color: var(--gray-400);
+}
+
+/* ── Bento tiles ─────────────────────────────────────────────────────────── */
+
+.bento-tile {
+  transition: box-shadow var(--t-fast), transform var(--t-fast), border-color var(--t-fast);
+  cursor: pointer;
+  user-select: none;
+}
+.bento-tile:hover {
+  box-shadow: var(--s-md);
+  transform: translateY(-2px);
+}
+.bento-tile:active {
+  transform: scale(0.98) !important;
+  box-shadow: var(--s-xs) !important;
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+
+@keyframes fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scale-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+.animate-fade-in  { animation: fade-in  var(--transition) ease-out both; }
+.animate-slide-up { animation: slide-up var(--transition) ease-out both; }
+.animate-scale-in { animation: scale-in var(--transition) ease-out both; }
+
+/* ===== 极致克制纹理和效果 ===== */
+
+/* 微妙噪声纹理 */
+.texture-noise {
+  position: relative;
+}
+
+.texture-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(90deg, transparent 50%, rgba(0,0,0,0.02) 50%),
+    linear-gradient(transparent 50%, rgba(0,0,0,0.02) 50%);
+  background-size: 8px 8px, 8px 8px;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 精致分隔线 */
+.divider-minimal {
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--gray-300) 20%, 
+    var(--gray-300) 80%, 
+    transparent 100%
+  );
+  border: none;
+  margin: var(--space-8) 0;
+}
+
+/* 加载动画 - 三个点 */
+.loading-dots {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  background-color: var(--gray-400);
+  border-radius: 50%;
+  animation: loading-dot 1.4s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loading-dot {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* 极简脉冲动画 */
+@keyframes pulse-minimal {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulse-minimal {
+  animation: pulse-minimal 2s ease-in-out infinite;
+}
+
+/* ===== 2026前沿微动画系统 ===== */
+
+/* 1. 动画曲线变量 */
+:root {
+  --animation-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --animation-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animation-sharp: cubic-bezier(0.4, 0, 0.6, 1);
+  
+  /* 动画时长 */
+  --duration-instant: 50ms;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-slower: 600ms;
+  
+  /* 扩展间距系统 */
+  --space-3xs: 2px;
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+  --space-5xl: 128px;
+  
+  /* 语义颜色 */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  
+  /* 透明度变量 */
+  --opacity-hover: 0.8;
+  --opacity-disabled: 0.5;
+  --opacity-overlay: 0.1;
+}
+
+/* 2. 悬停提升效果 */
+.hover-lift {
+  transition: transform var(--duration-fast) var(--animation-smooth), 
+              box-shadow var(--duration-fast) var(--animation-smooth),
+              border-color var(--duration-fast) var(--animation-smooth);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--s-md);
+}
+
+.hover-lift:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--s-xs);
+}
+
+/* 3. 按压缩放效果 */
+.press-scale {
+  transition: transform var(--duration-fast) var(--animation-smooth);
+}
+
+.press-scale:active {
+  transform: scale(0.96);
+}
+
+/* 4. 浮动动画 */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float 3s var(--animation-bounce) infinite;
+}
+
+/* 5. 微光动画 */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.1), 
+    transparent
+  );
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+}
+
+/* 6. 变形动画 */
+@keyframes morph {
+  0% { border-radius: 60% 40% 30% 70%/60% 30% 70% 40%; }
+  50% { border-radius: 30% 60% 70% 40%/50% 60% 30% 60%; }
+  100% { border-radius: 60% 40% 30% 70%/60% 30% 70% 40%; }
+}
+
+.animate-morph {
+  animation: morph 8s ease-in-out infinite;
+}
+
+/* 7. 金属着色器效果 */
+.metal-shader {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    rgba(0, 0, 0, 0.02) 100%
+  );
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 8. 新拟态主义 */
+.neu-light {
+  background: var(--gray-100);
+  box-shadow: 
+    4px 4px 8px rgba(0, 0, 0, 0.05),
+    -4px -4px 8px rgba(255, 255, 255, 0.7);
+}
+
+.neu-dark {
+  background: var(--gray-800);
+  box-shadow: 
+    4px 4px 8px rgba(0, 0, 0, 0.2),
+    -4px -4px 8px rgba(255, 255, 255, 0.05);
+}
+
+/* 9. 滚动触发动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scroll-animate {
+  animation: fadeInUp var(--duration-slow) var(--animation-smooth) both;
+}
+
+/* 10. 预测性加载动画 */
+@keyframes predictive-loading {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+.predictive-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.predictive-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent
+  );
+  animation: predictive-loading 1.5s ease-in-out infinite;
+}
+
+/* 11. 可访问性优化 */
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift,
+  .press-scale,
+  .animate-float,
+  .animate-shimmer,
+  .animate-morph,
+  .scroll-animate,
+  .predictive-loading::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* 12. 移动端优化 */
+@media (max-width: 768px) {
+  .hover-lift:hover {
+    transform: translateY(-1px);
+  }
+  
+  .press-scale:active {
+    transform: scale(0.98);
+  }
+}
+
+/* 13. 打印优化 */
+@media print {
+  .hover-lift,
+  .press-scale,
+  .animate-float,
+  .animate-shimmer,
+  .animate-morph,
+  .scroll-animate,
+  .predictive-loading::after,
+  .metal-shader,
+  .neu-light,
+  .neu-dark {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    background: none !important;
+    backdrop-filter: none !important;
+  }
+}

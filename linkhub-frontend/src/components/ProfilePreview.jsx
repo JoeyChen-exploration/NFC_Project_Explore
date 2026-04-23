@@ -1,97 +1,232 @@
-import { THEMES, SOCIAL_LIST, SOCIAL_ICONS } from './themes'
+import { useState, useEffect } from 'react';
+import { THEMES, SOCIAL_LIST, SOCIAL_ICONS } from './themes';
+
+function usePreviewScreen() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false,
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return { isMobile };
+}
 
 export default function ProfilePreview({ data, onLinkClick }) {
-  const { profile, socials, links } = data
-  const theme = THEMES.find(t => t.id === profile?.theme_id) || THEMES[0]
-  const activeSocials = SOCIAL_LIST.filter(s => socials?.[s])
+  const { isMobile } = usePreviewScreen();
+  const { profile, socials, links } = data;
+  const theme = THEMES.find(item => item.id === profile?.theme_id) || THEMES[0];
+  const activeSocials = SOCIAL_LIST.filter(item => socials?.[item]);
+  const avatarSrc =
+    profile?.avatar_url ||
+    `https://api.dicebear.com/7.x/adventurer/svg?seed=${profile?.avatar_seed || 1}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
 
   return (
-    <div style={{
-      width: '100%', height: '100%',
-      background: theme.bg,
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: '44px 20px 32px',
-      overflowY: 'auto',
-      fontFamily: "'DM Sans', sans-serif",
-    }}>
-      {/* Avatar */}
-      <div style={{
-        width: 90, height: 90, borderRadius: '50%',
-        border: `3px solid ${theme.accent}`,
-        overflow: 'hidden', marginBottom: 14,
-        boxShadow: `0 0 28px ${theme.accent}55`,
-        flexShrink: 0,
-      }}>
-        <img
-          src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${profile?.avatar_seed || 1}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-          alt="avatar" style={{ width: '100%', height: '100%' }}
-        />
-      </div>
-
-      {/* Name */}
-      <div style={{
-        fontSize: 22, fontWeight: 700, color: theme.text,
-        letterSpacing: '-0.5px', marginBottom: 6, textAlign: 'center',
-        fontFamily: "'DM Serif Display', serif",
-      }}>{profile?.name || '你的名字'}</div>
-
-      {/* Bio */}
-      <div style={{
-        fontSize: 13, color: theme.text, opacity: 0.72,
-        textAlign: 'center', lineHeight: 1.65, maxWidth: 240, marginBottom: 22,
-      }}>{profile?.bio || ''}</div>
-
-      {/* Social icons */}
-      {activeSocials.length > 0 && (
-        <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {activeSocials.map(s => (
-            <div key={s} style={{
-              width: 38, height: 38, borderRadius: '50%',
-              background: theme.btn, border: `1px solid ${theme.btnBorder}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', transition: 'transform 0.15s',
+    <div
+      style={{
+        minHeight: '100%',
+        background: theme.bg,
+        color: theme.text,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: isMobile ? '34px 18px 26px' : '48px 24px 36px',
+        fontFamily: 'var(--font-ui)',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 296,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <div
+          style={{
+            width: isMobile ? 84 : 94,
+            height: isMobile ? 84 : 94,
+            padding: 4,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.12)',
+            border: `1px solid ${theme.btnBorder}`,
+            boxShadow: '0 18px 48px rgba(0,0,0,0.18)',
+          }}
+        >
+          <img
+            src={avatarSrc}
+            alt="avatar"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: '50%',
+              display: 'block',
             }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          />
+        </div>
+
+        <div
+          style={{
+            marginTop: 18,
+            textAlign: 'center',
+            fontFamily: 'var(--font-display)',
+            fontSize: isMobile ? 30 : 32,
+            lineHeight: 0.95,
+            letterSpacing: '-0.05em',
+            wordBreak: 'break-word',
+          }}
+        >
+          {profile?.name || '你的名字'}
+        </div>
+
+        {profile?.bio && (
+          <div
+            style={{
+              marginTop: 12,
+              textAlign: 'center',
+              color: theme.text,
+              opacity: 0.72,
+              fontSize: 13,
+              lineHeight: 1.7,
+              maxWidth: 250,
+            }}
+          >
+            {profile.bio}
+          </div>
+        )}
+
+        {activeSocials.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: 10,
+              marginTop: 22,
+            }}
+          >
+            {activeSocials.map(item => (
+              <a
+                key={item}
+                href={socials[item]}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={item}
+                style={{
+                  width: 44,
+                  height: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 999,
+                  border: `1px solid ${theme.btnBorder}`,
+                  background: theme.btn,
+                  textDecoration: 'none',
+                  transition: 'transform 150ms ease, background-color 150ms ease',
+                }}
+                onMouseEnter={event => {
+                  event.currentTarget.style.transform = 'translateY(-1px)';
+                  event.currentTarget.style.background = theme.card;
+                }}
+                onMouseLeave={event => {
+                  event.currentTarget.style.transform = 'translateY(0)';
+                  event.currentTarget.style.background = theme.btn;
+                }}
+              >
+                {SOCIAL_ICONS[item](theme.accent)}
+              </a>
+            ))}
+          </div>
+        )}
+
+        <div
+          style={{
+            width: '100%',
+            display: 'grid',
+            gap: 10,
+            marginTop: 26,
+          }}
+        >
+          {(links || []).map(link => (
+            <a
+              key={link.id}
+              href={link.url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => onLinkClick?.(link.id)}
+              style={{
+                minHeight: 56,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '14px 16px',
+                textDecoration: 'none',
+                color: theme.text,
+                textAlign: 'center',
+                fontSize: 14,
+                fontWeight: 600,
+                letterSpacing: '-0.02em',
+                borderRadius: 18,
+                border: `1px solid ${theme.btnBorder}`,
+                background: theme.card,
+                backdropFilter: 'blur(14px)',
+                wordBreak: 'break-word',
+                transition: 'transform 150ms ease, background-color 150ms ease',
+              }}
+              onMouseEnter={event => {
+                event.currentTarget.style.transform = 'translateY(-1px)';
+                event.currentTarget.style.background = theme.btn;
+              }}
+              onMouseLeave={event => {
+                event.currentTarget.style.transform = 'translateY(0)';
+                event.currentTarget.style.background = theme.card;
+              }}
             >
-              {SOCIAL_ICONS[s](theme.accent)}
-            </div>
+              {link.label}
+            </a>
           ))}
         </div>
-      )}
 
-      {/* Links */}
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {(links || []).map(link => (
-          <a key={link.id} href={link.url} target="_blank" rel="noreferrer"
-            onClick={() => onLinkClick?.(link.id)}
+        {profile?.show_embed && profile?.embed_url && (
+          <div
             style={{
-              display: 'block', textDecoration: 'none',
+              width: '100%',
+              marginTop: 18,
+              overflow: 'hidden',
+              borderRadius: 20,
+              border: `1px solid ${theme.btnBorder}`,
               background: theme.card,
-              border: `1px solid ${theme.btnBorder}44`,
-              borderRadius: 14, padding: '13px 18px',
-              color: theme.text, fontSize: 14, fontWeight: 500, textAlign: 'center',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.2s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = theme.btn}
-            onMouseLeave={e => e.currentTarget.style.background = theme.card}
-          >{link.label}</a>
-        ))}
-      </div>
+          >
+            <iframe
+              src={profile.embed_url}
+              width="100%"
+              height="88"
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen"
+              style={{ display: 'block' }}
+            />
+          </div>
+        )}
 
-      {/* Embed */}
-      {profile?.show_embed && profile?.embed_url && (
-        <div style={{ width: '100%', marginTop: 18, borderRadius: 14, overflow: 'hidden' }}>
-          <iframe src={profile.embed_url} width="100%" height="80" frameBorder="0"
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen"
-            style={{ borderRadius: 14 }} />
+        <div
+          style={{
+            marginTop: 24,
+            fontSize: 11,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            opacity: 0.36,
+          }}
+        >
+          LinkHub
         </div>
-      )}
-
-      <div style={{ marginTop: 28, fontSize: 11, color: theme.text, opacity: 0.25 }}>
-        由 LinkHub 驱动
       </div>
     </div>
-  )
+  );
 }
