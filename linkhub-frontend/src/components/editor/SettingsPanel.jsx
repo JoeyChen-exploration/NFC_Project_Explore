@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { api } from '../../api';
 import { Card, SectionTitle, FormField, LightInput, bluePillBtn } from './ui';
+import { useI18n } from '../../hooks/useI18n';
 
 export default function SettingsPanel({ user }) {
+  const { tc } = useI18n();
   const [pwd, setPwd] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
@@ -14,7 +16,7 @@ export default function SettingsPanel({ user }) {
     setMsg('');
     setErr('');
     if (pwd.newPassword !== pwd.confirm) {
-      setErr('两次输入的新密码不一致');
+      setErr(tc('两次输入的新密码不一致', 'New passwords do not match'));
       return;
     }
     setLoading(true);
@@ -37,7 +39,7 @@ export default function SettingsPanel({ user }) {
       <Card>
         <div>
           <div className="mono-kicker">Account</div>
-          <SectionTitle style={{ marginTop: 8 }}>账号信息</SectionTitle>
+          <SectionTitle style={{ marginTop: 8 }}>{tc('账号信息', 'Account')}</SectionTitle>
         </div>
         <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column' }}>
           <div
@@ -48,13 +50,17 @@ export default function SettingsPanel({ user }) {
               borderBottom: '1px solid rgba(15, 15, 15, 0.08)',
             }}
           >
-            <span style={{ fontSize: 14, color: 'var(--mono-text-muted)' }}>用户名</span>
+            <span style={{ fontSize: 14, color: 'var(--mono-text-muted)' }}>
+              {tc('用户名', 'Username')}
+            </span>
             <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--mono-text)' }}>
               @{user?.username}
             </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0' }}>
-            <span style={{ fontSize: 14, color: 'var(--mono-text-muted)' }}>邮箱</span>
+            <span style={{ fontSize: 14, color: 'var(--mono-text-muted)' }}>
+              {tc('邮箱', 'Email')}
+            </span>
             <span style={{ fontSize: 14, color: 'var(--mono-text-soft)' }}>{user?.email}</span>
           </div>
         </div>
@@ -63,10 +69,10 @@ export default function SettingsPanel({ user }) {
       <Card>
         <div>
           <div className="mono-kicker">Security</div>
-          <SectionTitle style={{ marginTop: 8 }}>修改密码</SectionTitle>
+          <SectionTitle style={{ marginTop: 8 }}>{tc('修改密码', 'Change Password')}</SectionTitle>
         </div>
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <FormField label="当前密码">
+          <FormField label={tc('当前密码', 'Current Password')}>
             <LightInput
               type="password"
               value={pwd.currentPassword}
@@ -74,20 +80,20 @@ export default function SettingsPanel({ user }) {
               placeholder="••••••••"
             />
           </FormField>
-          <FormField label="新密码">
+          <FormField label={tc('新密码', 'New Password')}>
             <LightInput
               type="password"
               value={pwd.newPassword}
               onChange={set('newPassword')}
-              placeholder="至少 6 位"
+              placeholder={tc('至少 6 位', 'At least 6 characters')}
             />
           </FormField>
-          <FormField label="确认新密码">
+          <FormField label={tc('确认新密码', 'Confirm New Password')}>
             <LightInput
               type="password"
               value={pwd.confirm}
               onChange={set('confirm')}
-              placeholder="再输一次"
+              placeholder={tc('再输一次', 'Type again')}
             />
           </FormField>
 
@@ -131,7 +137,7 @@ export default function SettingsPanel({ user }) {
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading ? '修改中...' : '确认修改密码'}
+            {loading ? tc('修改中...', 'Updating...') : tc('确认修改密码', 'Update Password')}
           </button>
         </div>
       </Card>

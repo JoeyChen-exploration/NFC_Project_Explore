@@ -83,9 +83,6 @@ export default function AnalyticsPage() {
           <h1 style={{ margin: '14px 0 12px', fontSize: '2.8rem', letterSpacing: '-0.06em' }}>
             页面访问、链接点击和转化，应该在一页里讲清楚。
           </h1>
-          <p className="mono-copy">
-            这一页现在收成了更像产品后台的呈现方式。重点不是炫技，而是让你快速判断主页是否有效、哪些链接在带来真实动作。
-          </p>
         </section>
 
         {error && (

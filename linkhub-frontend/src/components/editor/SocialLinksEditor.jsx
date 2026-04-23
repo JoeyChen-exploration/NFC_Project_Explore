@@ -1,16 +1,17 @@
 import { Card, SectionTitle, FormField, LightInput } from './ui';
 import { SOCIAL_LIST, SOCIAL_ICONS } from '../themes';
+import { useI18n } from '../../hooks/useI18n';
 
 export default function SocialLinksEditor({ socials, onChange, onPatch }) {
+  const { tc } = useI18n();
+
   return (
     <Card>
       <div>
         <div className="mono-kicker">Presence</div>
-        <SectionTitle style={{ marginTop: 8 }}>社交账号</SectionTitle>
+        <SectionTitle style={{ marginTop: 8 }}>{tc('社交账号', 'Social Icons')}</SectionTitle>
       </div>
-      <p className="mono-panel-meta" style={{ marginTop: 12 }}>
-        保持少而精。把最能代表你身份和可信度的平台放在前面，比全部铺满更有质感。
-      </p>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 }}>
         {SOCIAL_LIST.map(s => (
           <FormField
@@ -33,7 +34,11 @@ export default function SocialLinksEditor({ socials, onChange, onPatch }) {
               value={socials[s]}
               onChange={e => onChange({ [s]: e.target.value })}
               onBlur={e => onPatch({ [s]: e.target.value })}
-              placeholder={s === 'website' ? 'https://你的官网或作品集' : '@用户名或主页链接'}
+              placeholder={
+                s === 'website'
+                  ? tc('https://你的官网或作品集', 'https://your-site-or-portfolio')
+                  : tc('@用户名或主页链接', '@username or profile URL')
+              }
             />
           </FormField>
         ))}

@@ -20,6 +20,7 @@ import {
 } from '../components/editor/ui';
 import NfcEditor from '../components/editor/NfcEditor';
 import { AppShell, AppTopbar } from '../components/AppShell';
+import { useI18n } from '../hooks/useI18n';
 
 const IconLinks = () => (
   <svg
@@ -129,13 +130,63 @@ function BentoTile({ Icon, title, detail, onClick }) {
   );
 }
 
+function ensureAbsoluteUrl(value) {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+}
+
+function normalizeSocialValue(platform, rawValue) {
+  const value = (rawValue || '').trim();
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const withoutAt = value.replace(/^@+/, '');
+  switch (platform) {
+    case 'instagram':
+      return `https://instagram.com/${withoutAt}`;
+    case 'twitter':
+      return `https://x.com/${withoutAt}`;
+    case 'github':
+      return `https://github.com/${withoutAt}`;
+    case 'youtube':
+      return `https://youtube.com/@${withoutAt}`;
+    case 'tiktok':
+      return `https://tiktok.com/@${withoutAt}`;
+    case 'website':
+      return ensureAbsoluteUrl(withoutAt);
+    default:
+      return ensureAbsoluteUrl(withoutAt);
+  }
+}
+
+function normalizeSocialPatch(patch) {
+  return Object.fromEntries(
+    Object.entries(patch).map(([platform, value]) => [
+      platform,
+      normalizeSocialValue(platform, value),
+    ]),
+  );
+}
+
+function normalizeSocials(socials) {
+  return Object.fromEntries(
+    Object.entries(socials || {}).map(([platform, value]) => [
+      platform,
+      normalizeSocialValue(platform, value),
+    ]),
+  );
+}
+
 export default function EditorPage() {
   const { user, logout } = useAuth();
+  const { tc } = useI18n();
   const navigate = useNavigate();
   const [tab, setTab] = useState(null);
   const [newLinkId, setNewLinkId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [data, setData] = useState({
     profile: {
       name: '',
@@ -152,7 +203,10 @@ export default function EditorPage() {
   useEffect(() => {
     api
       .getProfile()
-      .then(result => setData(result))
+      .then(result => {
+        setData(result);
+        setHasUnsavedChanges(false);
+      })
       .catch(console.error);
   }, []);
 
@@ -163,6 +217,7 @@ export default function EditorPage() {
 
   async function patchProfile(patch) {
     setData(current => ({ ...current, profile: { ...current.profile, ...patch } }));
+    setHasUnsavedChanges(true);
     setSaving(true);
     try {
       await api.updateProfile(patch);
@@ -176,9 +231,10 @@ export default function EditorPage() {
 
   async function patchSocials(patch) {
     setData(current => ({ ...current, socials: { ...current.socials, ...patch } }));
+    setHasUnsavedChanges(true);
     setSaving(true);
     try {
-      await api.updateSocials(patch);
+      await api.updateSocials(normalizeSocialPatch(patch));
       saved();
     } catch {
       saved('Failed');
@@ -192,6 +248,24 @@ export default function EditorPage() {
       const res = await api.addLink({ label: '', url: '' });
       setData(current => ({ ...current, links: [...current.links, res.link] }));
       setNewLinkId(res.link.id);
+      setHasUnsavedChanges(true);
+    } catch (error) {
+      window.alert(error.message);
+    }
+  }
+
+  async function addPresetLink(preset) {
+    try {
+      const res = await api.addLink({ label: preset.label, url: preset.url });
+      setData(current => ({ ...current, links: [...current.links, res.link] }));
+      setNewLinkId(res.link.id);
+      setHasUnsavedChanges(true);
+      const hasSocialValue = preset.socialKey && (data.socials?.[preset.socialKey] || '').trim();
+      saved(
+        hasSocialValue
+          ? tc('预设链接已添加（该平台已在社交 icon 中）', 'Preset added (already in social icons)')
+          : tc('预设链接已添加', 'Preset link added'),
+      );
     } catch (error) {
       window.alert(error.message);
     }
@@ -201,12 +275,14 @@ export default function EditorPage() {
     try {
       await api.deleteLink(id);
       setData(current => ({ ...current, links: current.links.filter(link => link.id !== id) }));
+      setHasUnsavedChanges(true);
     } catch (error) {
       window.alert(error.message);
     }
   }
 
   function updateLinkField(id, field, value) {
+    setHasUnsavedChanges(true);
     setData(current => ({
       ...current,
       links: current.links.map(link => (link.id === id ? { ...link, [field]: value } : link)),
@@ -235,6 +311,7 @@ export default function EditorPage() {
       ...current,
       links: current.links.map(item => (item.id === id ? { ...item, active: nextActive } : item)),
     }));
+    setHasUnsavedChanges(true);
     try {
       await api.toggleLink(id);
     } catch (error) {
@@ -271,35 +348,104 @@ export default function EditorPage() {
     }
   }
 
+  async function saveAllChanges() {
+    setSaving(true);
+    try {
+      const { profile, socials, links } = data;
+
+      await api.updateProfile({
+        name: profile.name,
+        bio: profile.bio,
+        avatar_seed: profile.avatar_seed,
+        avatar_url: profile.avatar_url,
+        theme_id: profile.theme_id,
+        embed_url: profile.embed_url,
+        show_embed: profile.show_embed,
+      });
+
+      await api.updateSocials({
+        ...normalizeSocials(socials),
+      });
+
+      await Promise.all(
+        links.map(link =>
+          api.updateLink(link.id, {
+            label: link.label,
+            url: link.url,
+            active: link.active,
+          }),
+        ),
+      );
+
+      setHasUnsavedChanges(false);
+      saved(tc('已同步到公开页', 'Synced to public page'));
+    } catch (error) {
+      saved(tc('同步失败', 'Sync failed'));
+      window.alert(
+        error.message || tc('保存失败，请检查输入格式', 'Save failed, check input format'),
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const currentTheme = THEMES.find(item => item.id === data.profile.theme_id);
   const tiles = [
     {
       id: 'links',
       Icon: IconLinks,
-      title: 'Profile & Links',
-      detail: data.links.length ? `${data.links.length} 个外链入口` : '先编辑你的资料和第一条链接',
+      title: tc('资料与链接', 'Profile & Links'),
+      detail: data.links.length
+        ? tc(`${data.links.length} 个外链入口`, `${data.links.length} external links`)
+        : tc('先编辑你的资料和第一条链接', 'Set your profile and first link'),
     },
     {
       id: 'appearance',
       Icon: IconAppearance,
-      title: 'Visual System',
-      detail: currentTheme?.label || '选择公开页氛围与社交链接',
+      title: tc('视觉风格', 'Visual System'),
+      detail: currentTheme?.label || tc('选择公开页氛围与社交链接', 'Theme and social setup'),
     },
-    { id: 'nfc', Icon: IconNfc, title: 'NFC Cards', detail: '管理芯片绑定、状态和扫描入口' },
+    {
+      id: 'nfc',
+      Icon: IconNfc,
+      title: tc('NFC 卡片', 'NFC Cards'),
+      detail: tc('管理芯片绑定、状态和扫描入口', 'Manage card binding and scan entries'),
+    },
     {
       id: 'settings',
       Icon: IconSettings,
-      title: 'Account',
-      detail: user?.email || '管理账号和密码',
+      title: tc('账号设置', 'Account'),
+      detail: user?.email || tc('管理账号和密码', 'Manage account and password'),
     },
   ];
 
   const tabTitles = {
-    links: 'Profile & Links',
-    appearance: 'Visual System',
-    nfc: 'NFC Cards',
-    settings: 'Account',
+    links: tc('资料与链接', 'Profile & Links'),
+    appearance: tc('视觉风格', 'Visual System'),
+    nfc: tc('NFC 卡片', 'NFC Cards'),
+    settings: tc('账号设置', 'Account'),
   };
+
+  const quickAddPresets = [
+    {
+      id: 'instagram',
+      label: 'Instagram',
+      url: 'https://instagram.com/yourname',
+      socialKey: 'instagram',
+    },
+    { id: 'facebook', label: 'Facebook', url: 'https://facebook.com/yourname' },
+    { id: 'whatsapp', label: 'WhatsApp', url: 'https://wa.me/1234567890' },
+    { id: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com/in/yourname' },
+    { id: 'x', label: 'X', url: 'https://x.com/yourname', socialKey: 'twitter' },
+    { id: 'youtube', label: 'YouTube', url: 'https://youtube.com/@yourname', socialKey: 'youtube' },
+    { id: 'tiktok', label: 'TikTok', url: 'https://tiktok.com/@yourname', socialKey: 'tiktok' },
+    {
+      id: 'website',
+      label: tc('官网', 'Website'),
+      url: 'https://your-site.com',
+      socialKey: 'website',
+    },
+  ];
 
   const leftPanel =
     tab === null ? (
@@ -307,14 +453,10 @@ export default function EditorPage() {
         <div className="mono-panel-header">
           <div>
             <div className="mono-kicker">Editor Home</div>
-            <h2>选择一个区域开始编辑</h2>
+            <h2>{tc('选择一个区域开始编辑', 'Choose an area to start editing')}</h2>
           </div>
           <span className="mono-badge">Live Preview</span>
         </div>
-        <p className="mono-panel-meta" style={{ marginBottom: 18 }}>
-          我保留了编辑器的信息架构，但把入口收成更像专业控制台的样子。你应该一眼知道自己是在编辑资料、外观、NFC
-          还是账户，而不是在一个花哨界面里找功能。
-        </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
           {tiles.map(tile => (
             <BentoTile
@@ -334,7 +476,7 @@ export default function EditorPage() {
           style={{ justifyContent: 'flex-start' }}
           onClick={() => setTab(null)}
         >
-          返回编辑导航
+          {tc('返回编辑导航', 'Back to editor navigation')}
         </button>
 
         {tab === 'links' && (
@@ -349,6 +491,9 @@ export default function EditorPage() {
             <LinkList
               links={data.links}
               onAdd={addLink}
+              onQuickAdd={addPresetLink}
+              quickAddPresets={quickAddPresets}
+              socials={data.socials}
               onRemove={removeLink}
               onUpdate={updateLinkField}
               onSave={saveLink}
@@ -399,7 +544,7 @@ export default function EditorPage() {
                     }))
                   }
                   onBlur={event => patchProfile({ embed_url: event.target.value })}
-                  placeholder="Spotify / YouTube iframe 地址"
+                  placeholder={tc('Spotify / YouTube iframe 地址', 'Spotify / YouTube iframe URL')}
                 />
               </FormField>
             </Card>
@@ -415,21 +560,28 @@ export default function EditorPage() {
     <AppShell>
       <AppTopbar
         title="Editor"
-        subtitle={tab ? tabTitles[tab] : '公开页与 NFC 名片编辑器'}
+        subtitle={tab ? tabTitles[tab] : tc('公开页与 NFC 名片编辑器', 'Public page & NFC editor')}
         actions={
           <>
             {saveMsg && <span className="mono-badge">{saving ? `${saveMsg}...` : saveMsg}</span>}
+            <button className="mono-btn" onClick={saveAllChanges} disabled={saving}>
+              {saving
+                ? tc('同步中...', 'Syncing...')
+                : hasUnsavedChanges
+                  ? tc('保存更改', 'Save changes')
+                  : tc('保持同步', 'Up to date')}
+            </button>
             <button
               className="mono-btn-ghost"
               onClick={() => {
                 navigator.clipboard.writeText(`${window.location.origin}/${user?.username}`);
-                saved('Copied');
+                saved(tc('已复制', 'Copied'));
               }}
             >
-              <ShareIcon /> 分享
+              <ShareIcon /> {tc('分享', 'Share')}
             </button>
             <button className="mono-btn-muted" onClick={() => navigate('/dashboard')}>
-              返回总览
+              {tc('返回总览', 'Back to dashboard')}
             </button>
             <button
               className="mono-btn"
@@ -438,23 +590,13 @@ export default function EditorPage() {
                 navigate('/login');
               }}
             >
-              退出
+              {tc('退出', 'Logout')}
             </button>
           </>
         }
       />
 
       <main className="mono-main">
-        <section className="mono-panel" style={{ marginBottom: 20 }}>
-          <div className="mono-kicker">Editing System</div>
-          <h1 style={{ margin: '14px 0 10px', fontSize: '2.8rem', letterSpacing: '-0.06em' }}>
-            编辑器也应该像一套高端产品，而不是功能堆叠。
-          </h1>
-          <p className="mono-copy">
-            我把它收成了单色工作台。左边负责编辑，右边持续预览，入口只保留最关键的四块，减少视觉分裂。
-          </p>
-        </section>
-
         <div className="mono-editor-layout">
           <div className="mono-editor-column">{leftPanel}</div>
 
@@ -496,7 +638,7 @@ export default function EditorPage() {
                 style={{ marginTop: 14, width: '100%' }}
                 onClick={() => window.open(`/${user?.username}`, '_blank')}
               >
-                打开公开页
+                {tc('打开公开页', 'Open public page')}
               </button>
             </div>
           </aside>
