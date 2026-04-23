@@ -477,7 +477,8 @@ a {
   border-radius: 28px;
   overflow: hidden;
   min-height: 560px;
-  background: #fff;
+  background: #0b0b0c;
+  display: flex;
 }
 
 .mono-auth {

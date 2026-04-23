@@ -124,10 +124,6 @@ export default function AuthPage() {
             <h1 className="mono-title" style={{ maxWidth: 560 }}>
               简约，不等于平淡。
             </h1>
-            <p className="mono-copy">
-              这个项目最好的方向，是把公开主页、NFC
-              分发和数据反馈做成一套统一体验。登录页也应该提前传达这种气质：克制、专业、没有噪音。
-            </p>
           </div>
 
           <ul className="mono-showcase-list" style={{ padding: 0, marginBottom: 0 }}>
@@ -142,9 +138,6 @@ export default function AuthPage() {
           <h2 style={{ margin: '14px 0 10px', fontSize: '2rem', letterSpacing: '-0.05em' }}>
             {titles[mode]}
           </h2>
-          <p className="mono-panel-meta" style={{ marginBottom: 22 }}>
-            用最少的操作进入系统，把注意力留给主页和卡片本身。
-          </p>
 
           <div className="mono-stack">
             {(mode === 'login' || mode === 'register' || mode === 'forgot') && (

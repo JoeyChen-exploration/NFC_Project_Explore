@@ -11,9 +11,6 @@ export default function ThemeSelector({ currentThemeId, onSelect }) {
         <div className="mono-kicker">Atmosphere</div>
         <SectionTitle style={{ marginTop: 8 }}>主题风格</SectionTitle>
       </div>
-      <p className="mono-panel-meta" style={{ marginTop: 12 }}>
-        我把主题收成了同一个黑白宇宙里的不同质感，而不是完全不同网站。选择的是氛围，不是杂乱。
-      </p>
       <div
         style={{
           display: 'grid',

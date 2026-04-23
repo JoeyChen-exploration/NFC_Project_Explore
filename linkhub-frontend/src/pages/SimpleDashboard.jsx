@@ -211,10 +211,6 @@ export default function SimpleDashboard() {
               <h1 style={{ margin: '14px 0 12px', fontSize: '3rem', letterSpacing: '-0.06em' }}>
                 这是你的分发中枢，不只是一个主页后台。
               </h1>
-              <p className="mono-copy">
-                现在这套 dashboard 已经围绕真实业务链路来组织：公开页、NFC
-                卡片、扫描和点击都在同一个界面里协作，而不是被拆成几块松散的功能。
-              </p>
               <div
                 className="mono-actions-inline"
                 style={{ justifyContent: 'flex-start', marginTop: 24 }}
@@ -302,9 +298,6 @@ export default function SimpleDashboard() {
                   </div>
                   <span className="mono-badge">Max 20</span>
                 </div>
-                <p className="mono-panel-meta">
-                  保持流程简单但真实可用。输入卡片名称和芯片序列号后，就能开始追踪扫描表现。
-                </p>
 
                 <form className="mono-stack" style={{ marginTop: 20 }} onSubmit={handleCreateCard}>
                   <div className="mono-field">

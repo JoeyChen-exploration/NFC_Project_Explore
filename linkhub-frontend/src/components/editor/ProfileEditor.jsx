@@ -83,9 +83,6 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
         </div>
         <span className="mono-badge">Public</span>
       </div>
-      <p className="mono-panel-meta" style={{ marginTop: 12 }}>
-        头像、标题和简介决定了别人扫到 NFC 卡片后的第一印象。这里尽量保持克制、清晰、有辨识度。
-      </p>
       <div
         style={{
           display: 'flex',

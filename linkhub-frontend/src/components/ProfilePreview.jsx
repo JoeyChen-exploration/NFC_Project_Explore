@@ -28,7 +28,9 @@ export default function ProfilePreview({ data, onLinkClick }) {
   return (
     <div
       style={{
+        width: '100%',
         minHeight: '100%',
+        flex: 1,
         background: theme.bg,
         color: theme.text,
         display: 'flex',
@@ -214,18 +216,6 @@ export default function ProfilePreview({ data, onLinkClick }) {
             />
           </div>
         )}
-
-        <div
-          style={{
-            marginTop: 24,
-            fontSize: 11,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            opacity: 0.36,
-          }}
-        >
-          LinkHub
-        </div>
       </div>
     </div>
   );

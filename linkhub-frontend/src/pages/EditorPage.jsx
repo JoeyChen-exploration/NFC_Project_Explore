@@ -311,10 +311,6 @@ export default function EditorPage() {
           </div>
           <span className="mono-badge">Live Preview</span>
         </div>
-        <p className="mono-panel-meta" style={{ marginBottom: 18 }}>
-          我保留了编辑器的信息架构，但把入口收成更像专业控制台的样子。你应该一眼知道自己是在编辑资料、外观、NFC
-          还是账户，而不是在一个花哨界面里找功能。
-        </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
           {tiles.map(tile => (
             <BentoTile
@@ -445,16 +441,6 @@ export default function EditorPage() {
       />
 
       <main className="mono-main">
-        <section className="mono-panel" style={{ marginBottom: 20 }}>
-          <div className="mono-kicker">Editing System</div>
-          <h1 style={{ margin: '14px 0 10px', fontSize: '2.8rem', letterSpacing: '-0.06em' }}>
-            编辑器也应该像一套高端产品，而不是功能堆叠。
-          </h1>
-          <p className="mono-copy">
-            我把它收成了单色工作台。左边负责编辑，右边持续预览，入口只保留最关键的四块，减少视觉分裂。
-          </p>
-        </section>
-
         <div className="mono-editor-layout">
           <div className="mono-editor-column">{leftPanel}</div>
 

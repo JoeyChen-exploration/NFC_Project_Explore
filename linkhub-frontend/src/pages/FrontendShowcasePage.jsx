@@ -36,9 +36,6 @@ export default function FrontendShowcasePage() {
           <h1 className="mono-title" style={{ maxWidth: 820 }}>
             黑白，不是保守。
           </h1>
-          <p className="mono-copy">
-            它可以更前沿，只是前沿不一定要靠五颜六色来表达。这个项目的新方向是把高级感建立在留白、秩序、层次和精确交互上。
-          </p>
         </section>
 
         <section className="mono-grid-2">
