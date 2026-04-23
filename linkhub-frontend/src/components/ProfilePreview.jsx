@@ -16,11 +16,46 @@ function usePreviewScreen() {
   return { isMobile };
 }
 
+function ensureAbsoluteUrl(value) {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+}
+
+function normalizeSocialUrl(platform, rawValue) {
+  const value = (rawValue || '').trim();
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const withoutAt = value.replace(/^@+/, '');
+  switch (platform) {
+    case 'instagram':
+      return `https://instagram.com/${withoutAt}`;
+    case 'twitter':
+      return `https://x.com/${withoutAt}`;
+    case 'github':
+      return `https://github.com/${withoutAt}`;
+    case 'youtube':
+      return `https://youtube.com/${withoutAt.replace(/^@/, '')}`;
+    case 'tiktok':
+      return `https://tiktok.com/${withoutAt.startsWith('@') ? withoutAt : `@${withoutAt}`}`;
+    case 'website':
+      return ensureAbsoluteUrl(withoutAt);
+    default:
+      return ensureAbsoluteUrl(withoutAt);
+  }
+}
+
 export default function ProfilePreview({ data, onLinkClick }) {
   const { isMobile } = usePreviewScreen();
   const { profile, socials, links } = data;
   const theme = THEMES.find(item => item.id === profile?.theme_id) || THEMES[0];
-  const activeSocials = SOCIAL_LIST.filter(item => socials?.[item]);
+  const normalizedSocials = SOCIAL_LIST.reduce((acc, item) => {
+    const normalized = normalizeSocialUrl(item, socials?.[item]);
+    if (normalized) acc[item] = normalized;
+    return acc;
+  }, {});
+  const activeSocials = SOCIAL_LIST.filter(item => normalizedSocials[item]);
   const avatarSrc =
     profile?.avatar_url ||
     `https://api.dicebear.com/7.x/adventurer/svg?seed=${profile?.avatar_seed || 1}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
@@ -116,7 +151,7 @@ export default function ProfilePreview({ data, onLinkClick }) {
             {activeSocials.map(item => (
               <a
                 key={item}
-                href={socials[item]}
+                href={normalizedSocials[item]}
                 target="_blank"
                 rel="noreferrer"
                 aria-label={item}
