@@ -130,6 +130,54 @@ function BentoTile({ Icon, title, detail, onClick }) {
   );
 }
 
+function ensureAbsoluteUrl(value) {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+}
+
+function normalizeSocialValue(platform, rawValue) {
+  const value = (rawValue || '').trim();
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const withoutAt = value.replace(/^@+/, '');
+  switch (platform) {
+    case 'instagram':
+      return `https://instagram.com/${withoutAt}`;
+    case 'twitter':
+      return `https://x.com/${withoutAt}`;
+    case 'github':
+      return `https://github.com/${withoutAt}`;
+    case 'youtube':
+      return `https://youtube.com/@${withoutAt}`;
+    case 'tiktok':
+      return `https://tiktok.com/@${withoutAt}`;
+    case 'website':
+      return ensureAbsoluteUrl(withoutAt);
+    default:
+      return ensureAbsoluteUrl(withoutAt);
+  }
+}
+
+function normalizeSocialPatch(patch) {
+  return Object.fromEntries(
+    Object.entries(patch).map(([platform, value]) => [
+      platform,
+      normalizeSocialValue(platform, value),
+    ]),
+  );
+}
+
+function normalizeSocials(socials) {
+  return Object.fromEntries(
+    Object.entries(socials || {}).map(([platform, value]) => [
+      platform,
+      normalizeSocialValue(platform, value),
+    ]),
+  );
+}
+
 export default function EditorPage() {
   const { user, logout } = useAuth();
   const { tc } = useI18n();
@@ -138,6 +186,7 @@ export default function EditorPage() {
   const [newLinkId, setNewLinkId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [data, setData] = useState({
     profile: {
       name: '',
@@ -154,7 +203,10 @@ export default function EditorPage() {
   useEffect(() => {
     api
       .getProfile()
-      .then(result => setData(result))
+      .then(result => {
+        setData(result);
+        setHasUnsavedChanges(false);
+      })
       .catch(console.error);
   }, []);
 
@@ -165,6 +217,7 @@ export default function EditorPage() {
 
   async function patchProfile(patch) {
     setData(current => ({ ...current, profile: { ...current.profile, ...patch } }));
+    setHasUnsavedChanges(true);
     setSaving(true);
     try {
       await api.updateProfile(patch);
@@ -178,9 +231,10 @@ export default function EditorPage() {
 
   async function patchSocials(patch) {
     setData(current => ({ ...current, socials: { ...current.socials, ...patch } }));
+    setHasUnsavedChanges(true);
     setSaving(true);
     try {
-      await api.updateSocials(patch);
+      await api.updateSocials(normalizeSocialPatch(patch));
       saved();
     } catch {
       saved('Failed');
@@ -194,6 +248,7 @@ export default function EditorPage() {
       const res = await api.addLink({ label: '', url: '' });
       setData(current => ({ ...current, links: [...current.links, res.link] }));
       setNewLinkId(res.link.id);
+      setHasUnsavedChanges(true);
     } catch (error) {
       window.alert(error.message);
     }
@@ -204,6 +259,7 @@ export default function EditorPage() {
       const res = await api.addLink({ label: preset.label, url: preset.url });
       setData(current => ({ ...current, links: [...current.links, res.link] }));
       setNewLinkId(res.link.id);
+      setHasUnsavedChanges(true);
       const hasSocialValue = preset.socialKey && (data.socials?.[preset.socialKey] || '').trim();
       saved(
         hasSocialValue
@@ -219,12 +275,14 @@ export default function EditorPage() {
     try {
       await api.deleteLink(id);
       setData(current => ({ ...current, links: current.links.filter(link => link.id !== id) }));
+      setHasUnsavedChanges(true);
     } catch (error) {
       window.alert(error.message);
     }
   }
 
   function updateLinkField(id, field, value) {
+    setHasUnsavedChanges(true);
     setData(current => ({
       ...current,
       links: current.links.map(link => (link.id === id ? { ...link, [field]: value } : link)),
@@ -253,6 +311,7 @@ export default function EditorPage() {
       ...current,
       links: current.links.map(item => (item.id === id ? { ...item, active: nextActive } : item)),
     }));
+    setHasUnsavedChanges(true);
     try {
       await api.toggleLink(id);
     } catch (error) {
@@ -286,6 +345,47 @@ export default function EditorPage() {
       }));
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  async function saveAllChanges() {
+    setSaving(true);
+    try {
+      const { profile, socials, links } = data;
+
+      await api.updateProfile({
+        name: profile.name,
+        bio: profile.bio,
+        avatar_seed: profile.avatar_seed,
+        avatar_url: profile.avatar_url,
+        theme_id: profile.theme_id,
+        embed_url: profile.embed_url,
+        show_embed: profile.show_embed,
+      });
+
+      await api.updateSocials({
+        ...normalizeSocials(socials),
+      });
+
+      await Promise.all(
+        links.map(link =>
+          api.updateLink(link.id, {
+            label: link.label,
+            url: link.url,
+            active: link.active,
+          }),
+        ),
+      );
+
+      setHasUnsavedChanges(false);
+      saved(tc('已同步到公开页', 'Synced to public page'));
+    } catch (error) {
+      saved(tc('同步失败', 'Sync failed'));
+      window.alert(
+        error.message || tc('保存失败，请检查输入格式', 'Save failed, check input format'),
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -464,6 +564,13 @@ export default function EditorPage() {
         actions={
           <>
             {saveMsg && <span className="mono-badge">{saving ? `${saveMsg}...` : saveMsg}</span>}
+            <button className="mono-btn" onClick={saveAllChanges} disabled={saving}>
+              {saving
+                ? tc('同步中...', 'Syncing...')
+                : hasUnsavedChanges
+                  ? tc('保存更改', 'Save changes')
+                  : tc('保持同步', 'Up to date')}
+            </button>
             <button
               className="mono-btn-ghost"
               onClick={() => {
