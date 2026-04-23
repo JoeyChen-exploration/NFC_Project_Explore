@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, SectionTitle, Toggle, DragIcon, TrashIcon, inlineInput, bluePillBtn } from './ui';
+import { useI18n } from '../../hooks/useI18n';
 
 export default function LinkList({
   links,
@@ -13,6 +14,7 @@ export default function LinkList({
   newLinkId,
   onNewLinkFocused,
 }) {
+  const { tc } = useI18n();
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -58,7 +60,9 @@ export default function LinkList({
       >
         <div>
           <div className="mono-kicker">Distribution</div>
-          <SectionTitle style={{ marginTop: 8, marginBottom: 0 }}>链接矩阵</SectionTitle>
+          <SectionTitle style={{ marginTop: 8, marginBottom: 0 }}>
+            {tc('链接矩阵', 'Link Matrix')}
+          </SectionTitle>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {links.length > 0 && (
@@ -71,11 +75,11 @@ export default function LinkList({
                 borderColor: selectMode ? 'rgba(15, 15, 15, 0.14)' : undefined,
               }}
             >
-              {selectMode ? '取消' : '批量'}
+              {selectMode ? tc('取消', 'Cancel') : tc('批量', 'Batch')}
             </button>
           )}
           <button onClick={onAdd} style={bluePillBtn}>
-            + Add New Link
+            {tc('+ 添加链接', '+ Add Link')}
           </button>
         </div>
       </div>
@@ -95,24 +99,24 @@ export default function LinkList({
           }}
         >
           <span style={{ fontSize: 13, color: 'var(--mono-text-muted)', flex: 1 }}>
-            已选 {selectedIds.size} 个
+            {tc(`已选 ${selectedIds.size} 个`, `${selectedIds.size} selected`)}
           </span>
           <button onClick={selectAll} style={batchBtn}>
-            全选
+            {tc('全选', 'Select all')}
           </button>
           <button
             onClick={handleBatchToggle}
             disabled={selectedIds.size === 0}
             style={{ ...batchBtn, color: 'var(--c-accent)' }}
           >
-            切换激活
+            {tc('切换激活', 'Toggle active')}
           </button>
           <button
             onClick={handleBatchDelete}
             disabled={selectedIds.size === 0}
             style={{ ...batchBtn, color: '#dc2626' }}
           >
-            删除
+            {tc('删除', 'Delete')}
           </button>
         </div>
       )}
@@ -130,7 +134,10 @@ export default function LinkList({
               background: 'rgba(255,255,255,0.56)',
             }}
           >
-            还没有链接。先放上最重要的一到三个入口，比堆很多按钮更高级。
+            {tc(
+              '还没有链接。先放上最重要的一到三个入口，比堆很多按钮更高级。',
+              'No links yet. Start with one to three key destinations.',
+            )}
           </div>
         )}
         {links.map(link => (
@@ -190,7 +197,7 @@ export default function LinkList({
                   fontSize: 14,
                   color: link.active ? 'var(--mono-text)' : 'var(--mono-text-muted)',
                 }}
-                placeholder="链接标题"
+                placeholder={tc('链接标题', 'Link title')}
                 onClick={e => selectMode && e.stopPropagation()}
               />
               <input
@@ -208,7 +215,7 @@ export default function LinkList({
               />
               {link.click_count > 0 && (
                 <div style={{ fontSize: 11, color: 'var(--mono-text-muted)', marginTop: 4 }}>
-                  {link.click_count} 次点击
+                  {tc(`${link.click_count} 次点击`, `${link.click_count} clicks`)}
                 </div>
               )}
             </div>

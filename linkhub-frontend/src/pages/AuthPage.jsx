@@ -3,22 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { AppShell, AppTopbar } from '../components/AppShell';
-
-const titles = {
-  login: '进入你的名片工作台',
-  register: '创建一个更高级的数字名片',
-  forgot: '重设密码',
-  reset: '设置新密码',
-};
-
-const buttonLabels = {
-  login: '进入控制台',
-  register: '创建账号',
-  forgot: '发送重设链接',
-  reset: '确认新密码',
-};
+import { useI18n } from '../hooks/useI18n';
 
 export default function AuthPage() {
+  const { tc } = useI18n();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -34,6 +22,19 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [devUrl, setDevUrl] = useState('');
+  const titles = {
+    login: tc('进入你的名片工作台', 'Enter your workspace'),
+    register: tc('创建一个更高级的数字名片', 'Create your premium digital card'),
+    forgot: tc('重设密码', 'Reset password'),
+    reset: tc('设置新密码', 'Set a new password'),
+  };
+
+  const buttonLabels = {
+    login: tc('进入控制台', 'Enter dashboard'),
+    register: tc('创建账号', 'Create account'),
+    forgot: tc('发送重设链接', 'Send reset link'),
+    reset: tc('确认新密码', 'Confirm new password'),
+  };
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -85,7 +86,7 @@ export default function AuthPage() {
         setTimeout(() => switchMode('login'), 1800);
       }
     } catch (err) {
-      setError(err.message || '请求失败');
+      setError(err.message || tc('请求失败', 'Request failed'));
     } finally {
       setLoading(false);
     }
@@ -101,17 +102,17 @@ export default function AuthPage() {
     <AppShell>
       <AppTopbar
         title="LinkHub"
-        subtitle="Monochrome NFC identity system"
+        subtitle={tc('黑白极简 NFC 身份系统', 'Monochrome NFC identity system')}
         actions={
           <>
             <button className="mono-btn-ghost" onClick={() => navigate('/showcase')}>
-              设计方向
+              {tc('设计方向', 'Design direction')}
             </button>
             <button
               className="mono-btn-muted"
               onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
             >
-              {mode === 'login' ? '注册' : '登录'}
+              {mode === 'login' ? tc('注册', 'Register') : tc('登录', 'Login')}
             </button>
           </>
         }
@@ -122,14 +123,29 @@ export default function AuthPage() {
           <div>
             <div className="mono-kicker">Black / White / Precise</div>
             <h1 className="mono-title" style={{ maxWidth: 560 }}>
-              简约，不等于平淡。
+              {tc('简约，不等于平淡。', 'Minimal, never plain.')}
             </h1>
           </div>
 
           <ul className="mono-showcase-list" style={{ padding: 0, marginBottom: 0 }}>
-            <li>单色基调配合高级留白，而不是用颜色堆气氛。</li>
-            <li>信息层级先于装饰，交互反馈克制但清晰。</li>
-            <li>移动端和桌面端保持同一套设计语言。</li>
+            <li>
+              {tc(
+                '单色基调配合高级留白，而不是用颜色堆气氛。',
+                'Monochrome tone with intentional whitespace.',
+              )}
+            </li>
+            <li>
+              {tc(
+                '信息层级先于装饰，交互反馈克制但清晰。',
+                'Information hierarchy first, decoration second.',
+              )}
+            </li>
+            <li>
+              {tc(
+                '移动端和桌面端保持同一套设计语言。',
+                'Same design language on mobile and desktop.',
+              )}
+            </li>
           </ul>
         </section>
 
@@ -224,22 +240,22 @@ export default function AuthPage() {
             )}
 
             <button className="mono-btn" onClick={handleSubmit} disabled={loading}>
-              {loading ? '处理中...' : buttonLabels[mode]}
+              {loading ? tc('处理中...', 'Processing...') : buttonLabels[mode]}
             </button>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {mode !== 'login' && (
                 <button className="mono-btn-ghost" onClick={() => switchMode('login')}>
-                  返回登录
+                  {tc('返回登录', 'Back to login')}
                 </button>
               )}
               {mode === 'login' && (
                 <>
                   <button className="mono-btn-ghost" onClick={() => switchMode('forgot')}>
-                    忘记密码
+                    {tc('忘记密码', 'Forgot password')}
                   </button>
                   <button className="mono-btn-muted" onClick={() => switchMode('register')}>
-                    创建账号
+                    {tc('创建账号', 'Create account')}
                   </button>
                 </>
               )}

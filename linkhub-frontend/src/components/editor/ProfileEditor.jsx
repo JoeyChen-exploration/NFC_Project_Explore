@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useScreenSize } from '../../hooks/useScreenSize';
 import { api } from '../../api';
 import { Card, SectionTitle, FormField, LightInput, lightInputBase, bluePillBtn } from './ui';
+import { useI18n } from '../../hooks/useI18n';
 
 function PencilIcon() {
   return (
@@ -40,6 +41,7 @@ function CameraIcon() {
 }
 
 export default function ProfileEditor({ profile, onChange, onPatch }) {
+  const { tc } = useI18n();
   const { isMobile } = useScreenSize();
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
@@ -79,7 +81,7 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
       >
         <div>
           <div className="mono-kicker">Identity</div>
-          <SectionTitle style={{ marginTop: 10 }}>个人资料</SectionTitle>
+          <SectionTitle style={{ marginTop: 10 }}>{tc('个人资料', 'Profile')}</SectionTitle>
         </div>
         <span className="mono-badge">Public</span>
       </div>
@@ -185,14 +187,17 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
               value={profile.name}
               onChange={e => onChange({ name: e.target.value })}
               onBlur={e => onPatch({ name: e.target.value })}
-              placeholder="输入你的名字或品牌名"
+              placeholder={tc('输入你的名字或品牌名', 'Enter your name or brand')}
             />
           </FormField>
           <FormField label="Bio">
             <textarea
               value={profile.bio}
               onChange={e => onChange({ bio: e.target.value })}
-              placeholder="用一句话说明你是谁、做什么、为什么值得被记住。"
+              placeholder={tc(
+                '用一句话说明你是谁、做什么、为什么值得被记住。',
+                'One line about who you are and what you do.',
+              )}
               rows={3}
               style={{
                 ...lightInputBase,
@@ -232,7 +237,7 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
             padding: '10px 14px',
           }}
         >
-          切换默认头像
+          {tc('切换默认头像', 'Switch default avatar')}
         </button>
       )}
     </Card>

@@ -20,6 +20,7 @@ import {
 } from '../components/editor/ui';
 import NfcEditor from '../components/editor/NfcEditor';
 import { AppShell, AppTopbar } from '../components/AppShell';
+import { useI18n } from '../hooks/useI18n';
 
 const IconLinks = () => (
   <svg
@@ -131,6 +132,7 @@ function BentoTile({ Icon, title, detail, onClick }) {
 
 export default function EditorPage() {
   const { user, logout } = useAuth();
+  const { tc } = useI18n();
   const navigate = useNavigate();
   const [tab, setTab] = useState(null);
   const [newLinkId, setNewLinkId] = useState(null);
@@ -276,29 +278,36 @@ export default function EditorPage() {
     {
       id: 'links',
       Icon: IconLinks,
-      title: 'Profile & Links',
-      detail: data.links.length ? `${data.links.length} 个外链入口` : '先编辑你的资料和第一条链接',
+      title: tc('资料与链接', 'Profile & Links'),
+      detail: data.links.length
+        ? tc(`${data.links.length} 个外链入口`, `${data.links.length} external links`)
+        : tc('先编辑你的资料和第一条链接', 'Set your profile and first link'),
     },
     {
       id: 'appearance',
       Icon: IconAppearance,
-      title: 'Visual System',
-      detail: currentTheme?.label || '选择公开页氛围与社交链接',
+      title: tc('视觉风格', 'Visual System'),
+      detail: currentTheme?.label || tc('选择公开页氛围与社交链接', 'Theme and social setup'),
     },
-    { id: 'nfc', Icon: IconNfc, title: 'NFC Cards', detail: '管理芯片绑定、状态和扫描入口' },
+    {
+      id: 'nfc',
+      Icon: IconNfc,
+      title: tc('NFC 卡片', 'NFC Cards'),
+      detail: tc('管理芯片绑定、状态和扫描入口', 'Manage card binding and scan entries'),
+    },
     {
       id: 'settings',
       Icon: IconSettings,
-      title: 'Account',
-      detail: user?.email || '管理账号和密码',
+      title: tc('账号设置', 'Account'),
+      detail: user?.email || tc('管理账号和密码', 'Manage account and password'),
     },
   ];
 
   const tabTitles = {
-    links: 'Profile & Links',
-    appearance: 'Visual System',
-    nfc: 'NFC Cards',
-    settings: 'Account',
+    links: tc('资料与链接', 'Profile & Links'),
+    appearance: tc('视觉风格', 'Visual System'),
+    nfc: tc('NFC 卡片', 'NFC Cards'),
+    settings: tc('账号设置', 'Account'),
   };
 
   const leftPanel =
@@ -307,7 +316,7 @@ export default function EditorPage() {
         <div className="mono-panel-header">
           <div>
             <div className="mono-kicker">Editor Home</div>
-            <h2>选择一个区域开始编辑</h2>
+            <h2>{tc('选择一个区域开始编辑', 'Choose an area to start editing')}</h2>
           </div>
           <span className="mono-badge">Live Preview</span>
         </div>
@@ -330,7 +339,7 @@ export default function EditorPage() {
           style={{ justifyContent: 'flex-start' }}
           onClick={() => setTab(null)}
         >
-          返回编辑导航
+          {tc('返回编辑导航', 'Back to editor navigation')}
         </button>
 
         {tab === 'links' && (
@@ -395,7 +404,7 @@ export default function EditorPage() {
                     }))
                   }
                   onBlur={event => patchProfile({ embed_url: event.target.value })}
-                  placeholder="Spotify / YouTube iframe 地址"
+                  placeholder={tc('Spotify / YouTube iframe 地址', 'Spotify / YouTube iframe URL')}
                 />
               </FormField>
             </Card>
@@ -411,7 +420,7 @@ export default function EditorPage() {
     <AppShell>
       <AppTopbar
         title="Editor"
-        subtitle={tab ? tabTitles[tab] : '公开页与 NFC 名片编辑器'}
+        subtitle={tab ? tabTitles[tab] : tc('公开页与 NFC 名片编辑器', 'Public page & NFC editor')}
         actions={
           <>
             {saveMsg && <span className="mono-badge">{saving ? `${saveMsg}...` : saveMsg}</span>}
@@ -419,13 +428,13 @@ export default function EditorPage() {
               className="mono-btn-ghost"
               onClick={() => {
                 navigator.clipboard.writeText(`${window.location.origin}/${user?.username}`);
-                saved('Copied');
+                saved(tc('已复制', 'Copied'));
               }}
             >
-              <ShareIcon /> 分享
+              <ShareIcon /> {tc('分享', 'Share')}
             </button>
             <button className="mono-btn-muted" onClick={() => navigate('/dashboard')}>
-              返回总览
+              {tc('返回总览', 'Back to dashboard')}
             </button>
             <button
               className="mono-btn"
@@ -434,7 +443,7 @@ export default function EditorPage() {
                 navigate('/login');
               }}
             >
-              退出
+              {tc('退出', 'Logout')}
             </button>
           </>
         }
@@ -482,7 +491,7 @@ export default function EditorPage() {
                 style={{ marginTop: 14, width: '100%' }}
                 onClick={() => window.open(`/${user?.username}`, '_blank')}
               >
-                打开公开页
+                {tc('打开公开页', 'Open public page')}
               </button>
             </div>
           </aside>

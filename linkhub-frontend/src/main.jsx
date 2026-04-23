@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { I18nProvider, useI18n } from './hooks/useI18n';
 import './styles/apple.css';
 import './styles/minimalism.css';
 import './styles/textures.css';
@@ -31,6 +32,7 @@ if (import.meta.env.DEV) {
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
+  const { tc } = useI18n();
   if (loading)
     return (
       <div
@@ -43,7 +45,7 @@ function PrivateRoute({ children }) {
           fontFamily: 'var(--font-ui)',
         }}
       >
-        加载中...
+        {tc('加载中...', 'Loading...')}
       </div>
     );
   return user ? children : <Navigate to="/login" replace />;
@@ -51,6 +53,7 @@ function PrivateRoute({ children }) {
 
 // 加载中的骨架屏
 function LoadingFallback() {
+  const { tc } = useI18n();
   return (
     <div
       style={{
@@ -62,56 +65,58 @@ function LoadingFallback() {
         fontFamily: 'var(--font-ui)',
       }}
     >
-      加载页面中...
+      {tc('加载页面中...', 'Loading page...')}
     </div>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path="/login" element={<AuthPage />} />
-            <Route path="/reset-password" element={<AuthPage />} />
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <SimpleDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/editor"
-              element={
-                <PrivateRoute>
-                  <EditorPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/analytics"
-              element={
-                <PrivateRoute>
-                  <AnalyticsPage />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/nfc" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/:username" element={<PublicPage />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/showcase" element={<FrontendShowcasePage />} />
+    <I18nProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/login" element={<AuthPage />} />
+              <Route path="/reset-password" element={<AuthPage />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <SimpleDashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/editor"
+                element={
+                  <PrivateRoute>
+                    <EditorPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <PrivateRoute>
+                    <AnalyticsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="/nfc" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/:username" element={<PublicPage />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/showcase" element={<FrontendShowcasePage />} />
 
-            {/* 只在开发环境显示测试路由 */}
-            {import.meta.env.DEV && TestResponsive && (
-              <Route path="/test-responsive" element={<TestResponsive />} />
-            )}
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </AuthProvider>
+              {/* 只在开发环境显示测试路由 */}
+              {import.meta.env.DEV && TestResponsive && (
+                <Route path="/test-responsive" element={<TestResponsive />} />
+              )}
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </AuthProvider>
+    </I18nProvider>
   );
 }
 
