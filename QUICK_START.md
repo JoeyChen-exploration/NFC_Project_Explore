@@ -36,6 +36,18 @@ cd linkhub-server && npm install
 
 ## 📋 常用命令
 
+### 一键启动 / 停止
+
+```bash
+# 在仓库根目录执行
+./start-linkhub.sh
+./stop-linkhub.sh
+
+# 或使用 npm
+npm run start:app
+npm run stop:app
+```
+
 ### 代码检查
 
 ```bash

@@ -8,11 +8,13 @@ export function Card({ children, style, noHover }) {
     <div
       className={noHover ? '' : 'hover-card'}
       style={{
-        background: 'var(--c-surface)',
-        borderRadius: isMobile ? 'var(--r-lg)' : 'var(--r-xl)',
-        border: '1px solid var(--c-border-light)',
-        padding: isMobile ? '16px 18px' : '22px 24px',
-        boxShadow: 'var(--s-sm)',
+        background:
+          'linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(250,250,250,0.96) 100%)',
+        borderRadius: isMobile ? '24px' : '28px',
+        border: '1px solid rgba(15, 15, 15, 0.08)',
+        padding: isMobile ? '18px 18px' : '24px 24px',
+        boxShadow: '0 22px 60px rgba(15, 15, 15, 0.06)',
+        backdropFilter: 'blur(18px)',
         ...style,
       }}
     >
@@ -25,10 +27,10 @@ export function SectionTitle({ children, style }) {
   return (
     <div
       style={{
-        fontSize: 15,
-        fontWeight: 600,
+        fontSize: 16,
+        fontWeight: 700,
         color: 'var(--c-text)',
-        letterSpacing: '-0.2px',
+        letterSpacing: '-0.03em',
         ...style,
       }}
     >
@@ -39,14 +41,14 @@ export function SectionTitle({ children, style }) {
 
 export function FormField({ label, children }) {
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div
         style={{
-          fontSize: 12,
+          fontSize: 11,
           color: 'var(--c-text-2)',
-          marginBottom: 7,
-          fontWeight: 500,
-          letterSpacing: '0.1px',
+          fontWeight: 700,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
         }}
       >
         {label}
@@ -61,15 +63,15 @@ export function FormField({ label, children }) {
 export const lightInputBase = {
   width: '100%',
   boxSizing: 'border-box',
-  background: 'var(--c-surface-2)',
-  border: '1px solid var(--c-border)',
-  borderRadius: 'var(--r-md)',
-  padding: '11px 14px',
+  background: 'rgba(255,255,255,0.84)',
+  border: '1px solid rgba(15, 15, 15, 0.12)',
+  borderRadius: '18px',
+  padding: '13px 15px',
   color: 'var(--c-text)',
   fontSize: 15,
   outline: 'none',
   fontFamily: 'var(--font-ui)',
-  transition: 'border-color var(--t-fast)',
+  transition: 'border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast)',
   WebkitAppearance: 'none',
   MozAppearance: 'none',
   appearance: 'none',
@@ -80,9 +82,15 @@ export function LightInput({ onBlur, ...props }) {
   return (
     <input
       style={{ ...lightInputBase, fontSize: isMobile ? 16 : 14 }}
-      onFocus={e => (e.target.style.borderColor = 'var(--c-accent)')}
+      onFocus={e => {
+        e.target.style.borderColor = 'rgba(15, 15, 15, 0.84)';
+        e.target.style.boxShadow = '0 0 0 4px rgba(15, 15, 15, 0.06)';
+        e.target.style.background = '#fff';
+      }}
       onBlur={e => {
-        e.target.style.borderColor = 'var(--c-border)';
+        e.target.style.borderColor = 'rgba(15, 15, 15, 0.12)';
+        e.target.style.boxShadow = 'none';
+        e.target.style.background = 'rgba(255,255,255,0.84)';
         onBlur?.(e);
       }}
       {...props}
@@ -114,7 +122,7 @@ export function Toggle({ on, onClick }) {
           width: w,
           height: h,
           borderRadius: h / 2,
-          background: on ? 'var(--c-accent)' : 'var(--c-border)',
+          background: on ? 'var(--mono-text)' : 'rgba(15, 15, 15, 0.15)',
           position: 'relative',
           transition: 'background var(--t-fast)',
         }}
@@ -151,13 +159,13 @@ export const inlineInput = {
 };
 
 export const bluePillBtn = {
-  background: 'var(--c-accent)',
+  background: 'var(--mono-text)',
   color: '#fff',
-  border: 'none',
+  border: '1px solid var(--mono-text)',
   borderRadius: 980,
-  padding: '8px 18px',
+  padding: '10px 18px',
   fontSize: 13,
-  fontWeight: 500,
+  fontWeight: 600,
   cursor: 'pointer',
   fontFamily: 'var(--font-ui)',
   minHeight: 44,
@@ -165,27 +173,27 @@ export const bluePillBtn = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  transition: 'background var(--t-fast), transform var(--t-fast)',
-  letterSpacing: '-0.1px',
+  transition: 'background var(--t-fast), transform var(--t-fast), border-color var(--t-fast)',
+  letterSpacing: '0.01em',
 };
 
 export const navBtnStyle = {
   display: 'flex',
   alignItems: 'center',
   gap: 6,
-  background: 'var(--c-surface)',
-  border: '1px solid var(--c-border-light)',
-  borderRadius: 'var(--r-md)',
-  padding: '6px 14px',
+  background: 'rgba(255,255,255,0.84)',
+  border: '1px solid rgba(15, 15, 15, 0.1)',
+  borderRadius: '999px',
+  padding: '8px 14px',
   fontSize: 13,
-  fontWeight: 500,
+  fontWeight: 600,
   color: 'var(--c-text)',
   cursor: 'pointer',
   fontFamily: 'var(--font-ui)',
-  minHeight: 36,
-  transition: 'background var(--t-fast)',
-  boxShadow: 'var(--s-xs)',
-  letterSpacing: '-0.1px',
+  minHeight: 40,
+  transition: 'background var(--t-fast), border-color var(--t-fast)',
+  boxShadow: '0 10px 30px rgba(15, 15, 15, 0.05)',
+  letterSpacing: '0.01em',
 };
 
 // ── Icons ────────────────────────────────────────────────────────────────

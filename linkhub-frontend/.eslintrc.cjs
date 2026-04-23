@@ -28,10 +28,6 @@ module.exports = {
     // React specific rules
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
     
     // General JavaScript rules
     'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],

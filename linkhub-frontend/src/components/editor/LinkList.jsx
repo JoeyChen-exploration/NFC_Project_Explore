@@ -56,15 +56,19 @@ export default function LinkList({
           marginBottom: 16,
         }}
       >
-        <SectionTitle style={{ marginBottom: 0 }}>Links</SectionTitle>
+        <div>
+          <div className="mono-kicker">Distribution</div>
+          <SectionTitle style={{ marginTop: 8, marginBottom: 0 }}>链接矩阵</SectionTitle>
+        </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {links.length > 0 && (
             <button
               onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
               style={{
                 ...bluePillBtn,
-                background: selectMode ? '#f3f4f6' : undefined,
-                color: selectMode ? '#374151' : undefined,
+                background: selectMode ? 'rgba(255,255,255,0.84)' : undefined,
+                color: selectMode ? 'var(--mono-text)' : undefined,
+                borderColor: selectMode ? 'rgba(15, 15, 15, 0.14)' : undefined,
               }}
             >
               {selectMode ? '取消' : '批量'}
@@ -84,13 +88,13 @@ export default function LinkList({
             alignItems: 'center',
             gap: 8,
             marginBottom: 12,
-            padding: '8px 12px',
-            background: '#f8fafc',
-            borderRadius: 8,
-            border: '1px solid #e5e7eb',
+            padding: '12px 14px',
+            background: 'rgba(255,255,255,0.75)',
+            borderRadius: 18,
+            border: '1px solid rgba(15, 15, 15, 0.08)',
           }}
         >
-          <span style={{ fontSize: 13, color: '#6b7280', flex: 1 }}>
+          <span style={{ fontSize: 13, color: 'var(--mono-text-muted)', flex: 1 }}>
             已选 {selectedIds.size} 个
           </span>
           <button onClick={selectAll} style={batchBtn}>
@@ -115,8 +119,18 @@ export default function LinkList({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {links.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af', fontSize: 14 }}>
-            还没有链接，点击「Add New Link」开始添加
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '36px 18px',
+              color: 'var(--mono-text-muted)',
+              fontSize: 14,
+              border: '1px dashed rgba(15, 15, 15, 0.12)',
+              borderRadius: 24,
+              background: 'rgba(255,255,255,0.56)',
+            }}
+          >
+            还没有链接。先放上最重要的一到三个入口，比堆很多按钮更高级。
           </div>
         )}
         {links.map(link => (
@@ -127,11 +141,11 @@ export default function LinkList({
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              background: link.active ? 'var(--c-surface)' : 'var(--c-surface-2)',
-              border: `1px solid ${selectMode && selectedIds.has(link.id) ? 'var(--c-accent)' : 'var(--c-border-light)'}`,
-              borderRadius: 12,
-              padding: '12px 14px',
-              opacity: link.active ? 1 : 0.55,
+              background: link.active ? 'rgba(255,255,255,0.82)' : 'rgba(15,15,15,0.035)',
+              border: `1px solid ${selectMode && selectedIds.has(link.id) ? 'rgba(15,15,15,0.84)' : 'rgba(15,15,15,0.08)'}`,
+              borderRadius: 22,
+              padding: '14px 15px',
+              opacity: link.active ? 1 : 0.58,
               cursor: selectMode ? 'pointer' : 'default',
             }}
             onClick={selectMode ? () => toggleSelect(link.id) : undefined}
@@ -143,8 +157,10 @@ export default function LinkList({
                   height: 18,
                   borderRadius: 4,
                   border: '2px solid',
-                  borderColor: selectedIds.has(link.id) ? 'var(--c-accent)' : '#d1d5db',
-                  background: selectedIds.has(link.id) ? 'var(--c-accent)' : '#fff',
+                  borderColor: selectedIds.has(link.id)
+                    ? 'var(--mono-text)'
+                    : 'rgba(15,15,15,0.18)',
+                  background: selectedIds.has(link.id) ? 'var(--mono-text)' : '#fff',
                   flexShrink: 0,
                   display: 'flex',
                   alignItems: 'center',
@@ -156,7 +172,7 @@ export default function LinkList({
                 )}
               </div>
             ) : (
-              <div style={{ color: '#d1d5db', flexShrink: 0 }}>
+              <div style={{ color: 'rgba(15,15,15,0.24)', flexShrink: 0 }}>
                 <DragIcon />
               </div>
             )}
@@ -172,9 +188,9 @@ export default function LinkList({
                   ...inlineInput,
                   fontWeight: 600,
                   fontSize: 14,
-                  color: link.active ? '#111' : '#9ca3af',
+                  color: link.active ? 'var(--mono-text)' : 'var(--mono-text-muted)',
                 }}
-                placeholder="输入标题..."
+                placeholder="链接标题"
                 onClick={e => selectMode && e.stopPropagation()}
               />
               <input
@@ -184,14 +200,14 @@ export default function LinkList({
                 style={{
                   ...inlineInput,
                   fontSize: 12,
-                  color: link.active ? 'var(--c-accent)' : '#9ca3af',
+                  color: link.active ? 'var(--mono-text-soft)' : 'var(--mono-text-muted)',
                   marginTop: 2,
                 }}
                 placeholder="https://your-link.com"
                 onClick={e => selectMode && e.stopPropagation()}
               />
               {link.click_count > 0 && (
-                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--mono-text-muted)', marginTop: 4 }}>
                   {link.click_count} 次点击
                 </div>
               )}
@@ -206,13 +222,13 @@ export default function LinkList({
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    color: '#d1d5db',
+                    color: 'rgba(15,15,15,0.24)',
                     padding: 4,
                     display: 'flex',
                     lineHeight: 1,
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#d1d5db')}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--mono-text)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(15,15,15,0.24)')}
                 >
                   <TrashIcon />
                 </button>
@@ -226,12 +242,13 @@ export default function LinkList({
 }
 
 const batchBtn = {
-  background: 'none',
-  border: '1px solid #e5e7eb',
-  borderRadius: 6,
-  padding: '4px 10px',
+  background: 'rgba(255,255,255,0.84)',
+  border: '1px solid rgba(15, 15, 15, 0.12)',
+  borderRadius: 999,
+  padding: '7px 12px',
   fontSize: 12,
-  color: '#374151',
+  color: 'var(--mono-text)',
   cursor: 'pointer',
-  fontFamily: "'DM Sans', sans-serif",
+  fontFamily: 'var(--font-ui)',
+  fontWeight: 600,
 };

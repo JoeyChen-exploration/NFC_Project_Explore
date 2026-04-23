@@ -47,12 +47,18 @@ async function request(method, path, body, timeout = DEFAULT_TIMEOUT) {
     timeout,
   );
 
-  const data = await res.json();
+  const contentType = res.headers.get('content-type') || '';
+  const data = contentType.includes('application/json') ? await res.json() : {};
   if (!res.ok) throw new Error(data.error || '请求失败');
   return data;
 }
 
 export const api = {
+  get: (path, timeout) => request('GET', path.replace(/^\/api/, ''), undefined, timeout),
+  post: (path, body, timeout) => request('POST', path.replace(/^\/api/, ''), body, timeout),
+  put: (path, body, timeout) => request('PUT', path.replace(/^\/api/, ''), body, timeout),
+  delete: (path, body, timeout) => request('DELETE', path.replace(/^\/api/, ''), body, timeout),
+
   // Auth
   register: body => request('POST', '/auth/register', body),
   login: body => request('POST', '/auth/login', body),

@@ -7,7 +7,13 @@ export default function ThemeSelector({ currentThemeId, onSelect }) {
 
   return (
     <Card>
-      <SectionTitle>主题</SectionTitle>
+      <div>
+        <div className="mono-kicker">Atmosphere</div>
+        <SectionTitle style={{ marginTop: 8 }}>主题风格</SectionTitle>
+      </div>
+      <p className="mono-panel-meta" style={{ marginTop: 12 }}>
+        我把主题收成了同一个黑白宇宙里的不同质感，而不是完全不同网站。选择的是氛围，不是杂乱。
+      </p>
       <div
         style={{
           display: 'grid',
@@ -21,22 +27,30 @@ export default function ThemeSelector({ currentThemeId, onSelect }) {
             key={t.id}
             onClick={() => onSelect(t.id)}
             style={{
-              borderRadius: 12,
+              borderRadius: 22,
               overflow: 'hidden',
               cursor: 'pointer',
-              border: currentThemeId === t.id ? '2px solid var(--c-accent)' : '2px solid #e5e7eb',
-              boxShadow: currentThemeId === t.id ? '0 0 0 3px #dbeafe' : 'none',
+              border:
+                currentThemeId === t.id
+                  ? '1px solid rgba(15, 15, 15, 0.84)'
+                  : '1px solid rgba(15, 15, 15, 0.08)',
+              boxShadow:
+                currentThemeId === t.id
+                  ? '0 18px 46px rgba(15, 15, 15, 0.12)'
+                  : '0 10px 32px rgba(15, 15, 15, 0.05)',
               transition: 'all 0.2s',
             }}
           >
-            <div style={{ height: 52, background: t.bg }} />
+            <div style={{ height: 58, background: t.bg }} />
             <div
               style={{
-                background: '#fff',
-                padding: '6px 10px',
+                background: 'rgba(255,255,255,0.96)',
+                padding: '10px 12px',
                 fontSize: 12,
-                fontWeight: 600,
-                color: currentThemeId === t.id ? 'var(--c-accent)' : '#6b7280',
+                fontWeight: 700,
+                color: currentThemeId === t.id ? 'var(--mono-text)' : 'var(--mono-text-muted)',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
               }}
             >
               {t.label}

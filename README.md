@@ -25,11 +25,13 @@
 
 ### **快速启动**
 
-使用项目根目录的一键启动脚本：
+使用仓库根目录的一键启动脚本：
 
 ```bash
-cd /Users/lobster_lab/.openclaw/workspace/nfc-project
+cd /Users/lobster_lab/.openclaw/workspace/nfc-project/NFC_Project_Explore
 ./start-linkhub.sh
+# 或
+npm run start:app
 ```
 
 ### **访问地址**
@@ -94,13 +96,16 @@ cd /Users/lobster_lab/.openclaw/workspace/nfc-project
 
 ## 🚀 快速启动
 
-脚本在项目根目录（`NFC_Project_Explore` 的**上一级**）：
+脚本现在就在仓库根目录：
 
 ```bash
-cd /Users/lobster_lab/.openclaw/workspace/nfc-project
+cd /Users/lobster_lab/.openclaw/workspace/nfc-project/NFC_Project_Explore
 
 ./start-linkhub.sh   # 启动前端 + 后端（后端支持热重载）
 ./stop-linkhub.sh    # 停止所有服务
+# 或
+npm run start:app
+npm run stop:app
 ```
 
 启动后访问：
@@ -111,7 +116,7 @@ cd /Users/lobster_lab/.openclaw/workspace/nfc-project
 - **后端 API**：http://localhost:3001
 - **健康检查**：http://localhost:3001/api/health
 
-日志文件：`backend.log` / `frontend.log`（同目录）
+日志和 PID 文件：`.linkhub-runtime/` 目录
 
 ---
 

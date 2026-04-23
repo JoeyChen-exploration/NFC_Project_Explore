@@ -12,7 +12,9 @@ const router = express.Router();
  * @returns {string} 匿名化的IP地址
  */
 function anonymizeIp(ip) {
-  if (!ip || ip === 'unknown') return 'anonymous';
+  if (!ip || ip === 'unknown') {
+    return 'anonymous';
+  }
 
   // 处理IPv4地址
   if (ip.includes('.')) {
@@ -73,6 +75,7 @@ router.get('/:username', (req, res) => {
         name: profile.name || username,
         bio: profile.bio || '',
         avatar_seed: profile.avatar_seed || 1,
+        avatar_url: profile.avatar_url || '',
         theme_id: profile.theme_id || 'midnight',
         embed_url: profile.embed_url || '',
         show_embed: !!profile.show_embed,

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useScreenSize } from '../../hooks/useScreenSize';
 import { api } from '../../api';
-import { Card, SectionTitle, FormField, LightInput, lightInputBase } from './ui';
+import { Card, SectionTitle, FormField, LightInput, lightInputBase, bluePillBtn } from './ui';
 
 function PencilIcon() {
   return (
@@ -69,7 +69,23 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
 
   return (
     <Card>
-      <SectionTitle>Profile</SectionTitle>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 16,
+          alignItems: 'flex-start',
+        }}
+      >
+        <div>
+          <div className="mono-kicker">Identity</div>
+          <SectionTitle style={{ marginTop: 10 }}>个人资料</SectionTitle>
+        </div>
+        <span className="mono-badge">Public</span>
+      </div>
+      <p className="mono-panel-meta" style={{ marginTop: 12 }}>
+        头像、标题和简介决定了别人扫到 NFC 卡片后的第一印象。这里尽量保持克制、清晰、有辨识度。
+      </p>
       <div
         style={{
           display: 'flex',
@@ -95,9 +111,10 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
               height: 72,
               borderRadius: '50%',
               overflow: 'hidden',
-              border: '2px solid var(--c-border)',
+              border: '1px solid rgba(15, 15, 15, 0.12)',
               cursor: 'pointer',
               position: 'relative',
+              boxShadow: '0 18px 40px rgba(15, 15, 15, 0.08)',
             }}
           >
             {uploading ? (
@@ -116,8 +133,8 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
                     width: 20,
                     height: 20,
                     borderRadius: '50%',
-                    border: '2px solid var(--c-border)',
-                    borderTopColor: 'var(--c-accent)',
+                    border: '2px solid rgba(15, 15, 15, 0.12)',
+                    borderTopColor: 'var(--mono-text)',
                     animation: 'spin 0.7s linear infinite',
                   }}
                 />
@@ -143,8 +160,8 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
               width: 22,
               height: 22,
               borderRadius: '50%',
-              background: 'var(--c-accent)',
-              border: '2px solid var(--c-surface)',
+              background: 'var(--mono-text)',
+              border: '2px solid rgba(255,255,255,0.95)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -166,29 +183,36 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
 
         {/* Fields */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <FormField label="PROFILE TITLE">
+          <FormField label="Profile Title">
             <LightInput
               value={profile.name}
               onChange={e => onChange({ name: e.target.value })}
               onBlur={e => onPatch({ name: e.target.value })}
-              placeholder="@yourname"
+              placeholder="输入你的名字或品牌名"
             />
           </FormField>
-          <FormField label="BIO">
+          <FormField label="Bio">
             <textarea
               value={profile.bio}
               onChange={e => onChange({ bio: e.target.value })}
-              placeholder="Tell the world about yourself..."
+              placeholder="用一句话说明你是谁、做什么、为什么值得被记住。"
               rows={3}
               style={{
                 ...lightInputBase,
                 resize: 'none',
                 lineHeight: 1.6,
                 fontSize: isMobile ? '16px' : '14px',
+                minHeight: 104,
               }}
-              onFocus={e => (e.target.style.borderColor = 'var(--c-accent)')}
+              onFocus={e => {
+                e.target.style.borderColor = 'rgba(15, 15, 15, 0.84)';
+                e.target.style.boxShadow = '0 0 0 4px rgba(15, 15, 15, 0.06)';
+                e.target.style.background = '#fff';
+              }}
               onBlur={e => {
-                e.target.style.borderColor = 'var(--c-border)';
+                e.target.style.borderColor = 'rgba(15, 15, 15, 0.12)';
+                e.target.style.boxShadow = 'none';
+                e.target.style.background = 'rgba(255,255,255,0.84)';
                 onPatch({ bio: e.target.value });
               }}
             />
@@ -202,16 +226,16 @@ export default function ProfileEditor({ profile, onChange, onPatch }) {
           onClick={() => onPatch({ avatar_seed: Math.floor(Math.random() * 1000) })}
           style={{
             marginTop: 12,
-            background: 'none',
-            border: 'none',
-            fontSize: 12,
-            color: 'var(--c-text-3)',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-ui)',
-            padding: '4px 0',
+            ...bluePillBtn,
+            background: 'rgba(255,255,255,0.84)',
+            color: 'var(--mono-text)',
+            border: '1px solid rgba(15, 15, 15, 0.12)',
+            minHeight: 0,
+            minWidth: 0,
+            padding: '10px 14px',
           }}
         >
-          ↻ Randomize avatar
+          切换默认头像
         </button>
       )}
     </Card>

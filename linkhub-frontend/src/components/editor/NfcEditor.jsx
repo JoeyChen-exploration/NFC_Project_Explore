@@ -122,11 +122,11 @@ export default function NfcEditor() {
       {error && (
         <div
           style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: 12,
+            background: 'rgba(15,15,15,0.04)',
+            border: '1px solid rgba(15,15,15,0.1)',
+            borderRadius: 20,
             padding: 14,
-            color: '#dc2626',
+            color: 'var(--mono-text)',
             fontSize: 14,
           }}
         >
@@ -146,13 +146,17 @@ export default function NfcEditor() {
           <StatCard
             label="总扫描次数"
             value={analytics.summary.total_scans}
-            accent="var(--c-accent)"
+            accent="var(--mono-text)"
           />
-          <StatCard label="激活卡片" value={analytics.summary.active_cards} accent="#059669" />
+          <StatCard
+            label="激活卡片"
+            value={analytics.summary.active_cards}
+            accent="var(--mono-text-soft)"
+          />
           <StatCard
             label="绑定卡片"
             value={analytics.summary.total_cards}
-            accent="#0891b2"
+            accent="var(--mono-text-muted)"
             style={isMobile ? { gridColumn: '1 / -1' } : {}}
           />
         </div>
@@ -161,10 +165,10 @@ export default function NfcEditor() {
       {/* ── 卡片列表 ── */}
       <div
         style={{
-          background: '#fff',
-          border: '1px solid #e5e7eb',
-          borderRadius: 16,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          background: 'rgba(255,255,255,0.92)',
+          border: '1px solid rgba(15,15,15,0.08)',
+          borderRadius: 28,
+          boxShadow: '0 24px 56px rgba(15,15,15,0.07)',
           overflow: 'hidden',
         }}
       >
@@ -175,7 +179,7 @@ export default function NfcEditor() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid #f3f4f6',
+            borderBottom: '1px solid rgba(15,15,15,0.08)',
           }}
         >
           <SectionTitle style={{ fontSize: 14 }}>NFC 卡片列表</SectionTitle>
@@ -185,11 +189,11 @@ export default function NfcEditor() {
               setBindError('');
             }}
             style={{
-              background: 'var(--c-accent)',
+              background: 'var(--mono-text)',
               color: '#fff',
-              border: 'none',
-              borderRadius: 8,
-              padding: '7px 14px',
+              border: '1px solid var(--mono-text)',
+              borderRadius: 999,
+              padding: '9px 14px',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',
@@ -206,21 +210,23 @@ export default function NfcEditor() {
             onSubmit={handleBind}
             style={{
               padding: isMobile ? '14px 18px' : '16px 22px',
-              borderBottom: '1px solid #f3f4f6',
-              background: '#f8fafc',
+              borderBottom: '1px solid rgba(15,15,15,0.08)',
+              background: 'rgba(15,15,15,0.025)',
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 10 }}>
+            <div
+              style={{ fontSize: 13, fontWeight: 700, color: 'var(--mono-text)', marginBottom: 10 }}
+            >
               绑定新 NFC 卡片
             </div>
             {bindError && (
               <div
                 style={{
-                  background: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  borderRadius: 8,
+                  background: 'rgba(15,15,15,0.04)',
+                  border: '1px solid rgba(15,15,15,0.1)',
+                  borderRadius: 18,
                   padding: '8px 12px',
-                  color: '#dc2626',
+                  color: 'var(--mono-text)',
                   fontSize: 13,
                   marginBottom: 10,
                 }}
@@ -250,7 +256,7 @@ export default function NfcEditor() {
                 style={inputStyle}
               />
             </div>
-            <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--mono-text-muted)', marginBottom: 10 }}>
               序列号在 NFC 读卡器或手机 NFC 工具中可查看，通常为 8 位十六进制字符。
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -258,10 +264,10 @@ export default function NfcEditor() {
                 type="submit"
                 disabled={binding}
                 style={{
-                  background: 'var(--c-accent)',
+                  background: 'var(--mono-text)',
                   color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
+                  border: '1px solid var(--mono-text)',
+                  borderRadius: 999,
                   padding: '8px 16px',
                   fontSize: 13,
                   fontWeight: 600,
@@ -279,12 +285,12 @@ export default function NfcEditor() {
                   setBindError('');
                 }}
                 style={{
-                  background: 'none',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 8,
+                  background: 'rgba(255,255,255,0.84)',
+                  border: '1px solid rgba(15,15,15,0.12)',
+                  borderRadius: 999,
                   padding: '8px 14px',
                   fontSize: 13,
-                  color: '#6b7280',
+                  color: 'var(--mono-text)',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
                 }}
@@ -297,17 +303,26 @@ export default function NfcEditor() {
 
         {/* 加载 / 空状态 */}
         {loading && (
-          <div style={{ padding: '40px 0', textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>
+          <div
+            style={{
+              padding: '40px 0',
+              textAlign: 'center',
+              color: 'var(--mono-text-muted)',
+              fontSize: 14,
+            }}
+          >
             加载中...
           </div>
         )}
         {!loading && cards.length === 0 && (
           <div style={{ padding: '40px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: 36, marginBottom: 10 }}>📇</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+            <div
+              style={{ fontSize: 14, fontWeight: 700, color: 'var(--mono-text)', marginBottom: 6 }}
+            >
               还没有绑定 NFC 卡片
             </div>
-            <div style={{ fontSize: 13, color: '#9ca3af' }}>
+            <div style={{ fontSize: 13, color: 'var(--mono-text-muted)' }}>
               绑定后，扫描卡片自动跳转到你的个人主页。
             </div>
           </div>
@@ -320,7 +335,7 @@ export default function NfcEditor() {
               key={card.id}
               style={{
                 padding: isMobile ? '12px 18px' : '14px 22px',
-                borderBottom: '1px solid #f9fafb',
+                borderBottom: '1px solid rgba(15,15,15,0.05)',
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 12,
@@ -331,7 +346,7 @@ export default function NfcEditor() {
                   width: 38,
                   height: 38,
                   borderRadius: 10,
-                  background: card.active ? 'var(--c-surface-2)' : '#f3f4f6',
+                  background: card.active ? 'rgba(15,15,15,0.05)' : 'rgba(15,15,15,0.035)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -339,7 +354,10 @@ export default function NfcEditor() {
                   marginTop: 2,
                 }}
               >
-                <NfcIcon size={18} color={card.active ? 'var(--c-accent)' : '#9ca3af'} />
+                <NfcIcon
+                  size={18}
+                  color={card.active ? 'var(--mono-text)' : 'var(--mono-text-muted)'}
+                />
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -357,13 +375,17 @@ export default function NfcEditor() {
                     />
                     <button
                       onClick={() => handleRename(card)}
-                      style={smallBtn('var(--c-accent)', '#fff')}
+                      style={smallBtn('var(--mono-text)', '#fff')}
                     >
                       保存
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
-                      style={smallBtn('none', '#6b7280', '1px solid #e5e7eb')}
+                      style={smallBtn(
+                        'rgba(255,255,255,0.84)',
+                        'var(--mono-text)',
+                        '1px solid rgba(15,15,15,0.12)',
+                      )}
                     >
                       取消
                     </button>
@@ -378,16 +400,16 @@ export default function NfcEditor() {
                       flexWrap: 'wrap',
                     }}
                   >
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--mono-text)' }}>
                       {card.card_name}
                     </span>
                     {!card.active && (
                       <span
                         style={{
                           fontSize: 11,
-                          background: '#f3f4f6',
-                          color: '#9ca3af',
-                          borderRadius: 4,
+                          background: 'rgba(15,15,15,0.05)',
+                          color: 'var(--mono-text-muted)',
+                          borderRadius: 999,
                           padding: '2px 6px',
                           fontWeight: 600,
                         }}
@@ -400,7 +422,7 @@ export default function NfcEditor() {
                 <div
                   style={{
                     fontSize: 12,
-                    color: '#6b7280',
+                    color: 'var(--mono-text-soft)',
                     fontFamily: 'monospace',
                     marginBottom: 3,
                   }}
@@ -410,7 +432,7 @@ export default function NfcEditor() {
                 <div
                   style={{
                     fontSize: 12,
-                    color: '#9ca3af',
+                    color: 'var(--mono-text-muted)',
                     display: 'flex',
                     flexWrap: 'wrap',
                     gap: '3px 10px',
@@ -426,11 +448,11 @@ export default function NfcEditor() {
                   <span
                     style={{
                       fontSize: 11,
-                      color: '#9ca3af',
+                      color: 'var(--mono-text-muted)',
                       fontFamily: 'monospace',
-                      background: '#f8fafc',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: 4,
+                      background: 'rgba(15,15,15,0.03)',
+                      border: '1px solid rgba(15,15,15,0.08)',
+                      borderRadius: 999,
                       padding: '2px 6px',
                       maxWidth: 220,
                       overflow: 'hidden',
@@ -444,7 +466,7 @@ export default function NfcEditor() {
                     onClick={() => navigator.clipboard?.writeText(scanUrl(card.card_serial))}
                     style={{
                       fontSize: 11,
-                      color: 'var(--c-accent)',
+                      color: 'var(--mono-text)',
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
@@ -469,7 +491,7 @@ export default function NfcEditor() {
                 </button>
                 <button
                   onClick={() => handleToggleActive(card)}
-                  style={{ ...actionBtn, color: card.active ? '#dc2626' : '#059669' }}
+                  style={{ ...actionBtn, color: 'var(--mono-text)' }}
                 >
                   {card.active ? '停用' : '激活'}
                 </button>
@@ -477,13 +499,17 @@ export default function NfcEditor() {
                   <div style={{ display: 'flex', gap: 4 }}>
                     <button
                       onClick={() => handleDelete(card.id)}
-                      style={smallBtn('#dc2626', '#fff')}
+                      style={smallBtn('var(--mono-text)', '#fff')}
                     >
                       确认
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(null)}
-                      style={smallBtn('none', '#6b7280', '1px solid #e5e7eb')}
+                      style={smallBtn(
+                        'rgba(255,255,255,0.84)',
+                        'var(--mono-text)',
+                        '1px solid rgba(15,15,15,0.12)',
+                      )}
                     >
                       取消
                     </button>
@@ -491,7 +517,7 @@ export default function NfcEditor() {
                 ) : (
                   <button
                     onClick={() => setConfirmDeleteId(card.id)}
-                    style={{ ...actionBtn, color: '#dc2626' }}
+                    style={{ ...actionBtn, color: 'var(--mono-text)' }}
                   >
                     解绑
                   </button>
@@ -507,7 +533,7 @@ export default function NfcEditor() {
           style={{
             fontSize: 11,
             fontWeight: 700,
-            color: '#9ca3af',
+            color: 'var(--mono-text-muted)',
             textTransform: 'uppercase',
             letterSpacing: '0.6px',
             marginBottom: 14,
@@ -528,8 +554,8 @@ export default function NfcEditor() {
                   width: 22,
                   height: 22,
                   borderRadius: '50%',
-                  background: 'var(--c-surface-2)',
-                  color: 'var(--c-accent)',
+                  background: 'rgba(15,15,15,0.06)',
+                  color: 'var(--mono-text)',
                   fontSize: 12,
                   fontWeight: 700,
                   display: 'flex',
@@ -541,10 +567,17 @@ export default function NfcEditor() {
                 {num}
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 2 }}>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: 'var(--mono-text)',
+                    marginBottom: 2,
+                  }}
+                >
                   {title}
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{desc}</div>
+                <div style={{ fontSize: 12, color: 'var(--mono-text-soft)' }}>{desc}</div>
               </div>
             </div>
           ))}
@@ -560,11 +593,11 @@ function StatCard({ label, value, accent, style = {} }) {
   return (
     <div
       style={{
-        background: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 16,
+        background: 'rgba(255,255,255,0.92)',
+        border: '1px solid rgba(15,15,15,0.08)',
+        borderRadius: 24,
         padding: '16px 18px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        boxShadow: '0 20px 50px rgba(15,15,15,0.06)',
         ...style,
       }}
     >
@@ -580,34 +613,35 @@ function StatCard({ label, value, accent, style = {} }) {
       >
         {value}
       </div>
-      <div style={{ fontSize: 13, color: '#6b7280' }}>{label}</div>
+      <div style={{ fontSize: 13, color: 'var(--mono-text-soft)' }}>{label}</div>
     </div>
   );
 }
 
 const inputStyle = {
   flex: 1,
-  border: '1px solid #e5e7eb',
-  borderRadius: 8,
-  padding: '9px 12px',
+  border: '1px solid rgba(15,15,15,0.12)',
+  borderRadius: 18,
+  padding: '11px 13px',
   fontSize: 14,
-  fontFamily: "'DM Sans', sans-serif",
+  fontFamily: 'var(--font-ui)',
   outline: 'none',
-  background: '#fff',
-  color: '#111',
+  background: 'rgba(255,255,255,0.9)',
+  color: 'var(--mono-text)',
   width: '100%',
   boxSizing: 'border-box',
 };
 
 const actionBtn = {
-  background: 'none',
-  border: '1px solid #e5e7eb',
-  borderRadius: 6,
-  padding: '4px 10px',
+  background: 'rgba(255,255,255,0.84)',
+  border: '1px solid rgba(15,15,15,0.12)',
+  borderRadius: 999,
+  padding: '7px 10px',
   fontSize: 12,
-  color: '#374151',
+  color: 'var(--mono-text)',
   cursor: 'pointer',
-  fontFamily: "'DM Sans', sans-serif",
+  fontFamily: 'var(--font-ui)',
+  fontWeight: 600,
   whiteSpace: 'nowrap',
 };
 
@@ -616,11 +650,12 @@ function smallBtn(bg, color, border = 'none') {
     background: bg,
     color,
     border,
-    borderRadius: 6,
-    padding: '4px 8px',
+    borderRadius: 999,
+    padding: '7px 10px',
     fontSize: 12,
     cursor: 'pointer',
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: 'var(--font-ui)',
+    fontWeight: 600,
     whiteSpace: 'nowrap',
   };
 }

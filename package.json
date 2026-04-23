@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky",
+    "start:app": "./start-linkhub.sh",
+    "stop:app": "./stop-linkhub.sh",
     "lint:frontend": "cd linkhub-frontend && npm run lint",
     "lint:backend": "cd linkhub-server && npm run lint",
     "lint": "npm run lint:frontend && npm run lint:backend",

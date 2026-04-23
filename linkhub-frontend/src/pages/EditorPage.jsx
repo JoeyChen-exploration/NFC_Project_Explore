@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
-import { useScreenSize } from '../hooks/useScreenSize';
 import { THEMES } from '../components/themes';
 import ProfilePreview from '../components/ProfilePreview';
-import EditorLayout from '../components/editor/EditorLayout';
 import ProfileEditor from '../components/editor/ProfileEditor';
 import LinkList from '../components/editor/LinkList';
 import ThemeSelector from '../components/editor/ThemeSelector';
@@ -21,8 +19,7 @@ import {
   ShareIcon,
 } from '../components/editor/ui';
 import NfcEditor from '../components/editor/NfcEditor';
-
-// ── Bento icons ──────────────────────────────────────────────────────────────
+import { AppShell, AppTopbar } from '../components/AppShell';
 
 const IconLinks = () => (
   <svg
@@ -90,57 +87,52 @@ const IconSettings = () => (
   </svg>
 );
 
-// ── Bento Tile ───────────────────────────────────────────────────────────────
-
 function BentoTile({ Icon, title, detail, onClick }) {
   return (
-    <div
-      className="bento-tile"
+    <button
       onClick={onClick}
+      className="mono-surface"
       style={{
-        background: 'var(--c-surface)',
-        border: '1px solid var(--c-border)',
-        borderRadius: 12,
+        borderRadius: 24,
         padding: '22px 20px',
         display: 'flex',
         flexDirection: 'column',
         gap: 14,
-        minHeight: 128,
+        minHeight: 156,
+        textAlign: 'left',
+        cursor: 'pointer',
       }}
     >
-      <div style={{ color: 'var(--c-text-2)' }}>
+      <div style={{ color: 'var(--mono-text-soft)' }}>
         <Icon />
       </div>
       <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 1, opacity: 0 }} />
         <div
-          style={{ fontWeight: 600, fontSize: 15, color: 'var(--c-text)', letterSpacing: '-0.2px' }}
+          style={{
+            fontWeight: 700,
+            fontSize: 16,
+            color: 'var(--mono-text)',
+            letterSpacing: '-0.03em',
+          }}
         >
           {title}
         </div>
-        <div style={{ fontSize: 12, color: 'var(--c-text-3)', marginTop: 3 }}>{detail}</div>
+        <div
+          style={{ fontSize: 12, color: 'var(--mono-text-muted)', marginTop: 6, lineHeight: 1.6 }}
+        >
+          {detail}
+        </div>
       </div>
-      <div
-        style={{
-          fontSize: 12,
-          color: 'var(--c-text-3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-        }}
-      >
-        <span>→</span>
-      </div>
-    </div>
+      <div className="mono-kicker">Open</div>
+    </button>
   );
 }
-
-// ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function EditorPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { isMobile } = useScreenSize();
-  const [tab, setTab] = useState(null); // null = bento home
+  const [tab, setTab] = useState(null);
   const [newLinkId, setNewLinkId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
@@ -149,7 +141,7 @@ export default function EditorPage() {
       name: '',
       bio: '',
       avatar_seed: 1,
-      theme_id: 'midnight',
+      theme_id: 'noir',
       embed_url: '',
       show_embed: false,
     },
@@ -160,17 +152,17 @@ export default function EditorPage() {
   useEffect(() => {
     api
       .getProfile()
-      .then(d => setData(d))
+      .then(result => setData(result))
       .catch(console.error);
   }, []);
 
-  const saved = (msg = 'Saved') => {
-    setSaveMsg(msg);
-    setTimeout(() => setSaveMsg(''), 2000);
+  const saved = (message = 'Saved') => {
+    setSaveMsg(message);
+    window.setTimeout(() => setSaveMsg(''), 1800);
   };
 
   async function patchProfile(patch) {
-    setData(d => ({ ...d, profile: { ...d.profile, ...patch } }));
+    setData(current => ({ ...current, profile: { ...current.profile, ...patch } }));
     setSaving(true);
     try {
       await api.updateProfile(patch);
@@ -183,7 +175,7 @@ export default function EditorPage() {
   }
 
   async function patchSocials(patch) {
-    setData(d => ({ ...d, socials: { ...d.socials, ...patch } }));
+    setData(current => ({ ...current, socials: { ...current.socials, ...patch } }));
     setSaving(true);
     try {
       await api.updateSocials(patch);
@@ -198,28 +190,31 @@ export default function EditorPage() {
   async function addLink() {
     try {
       const res = await api.addLink({ label: '', url: '' });
-      setData(d => ({ ...d, links: [...d.links, res.link] }));
+      setData(current => ({ ...current, links: [...current.links, res.link] }));
       setNewLinkId(res.link.id);
-    } catch (e) {
-      alert(e.message);
+    } catch (error) {
+      window.alert(error.message);
     }
   }
 
   async function removeLink(id) {
     try {
       await api.deleteLink(id);
-      setData(d => ({ ...d, links: d.links.filter(l => l.id !== id) }));
-    } catch (e) {
-      alert(e.message);
+      setData(current => ({ ...current, links: current.links.filter(link => link.id !== id) }));
+    } catch (error) {
+      window.alert(error.message);
     }
   }
 
-  function updateLinkField(id, field, val) {
-    setData(d => ({ ...d, links: d.links.map(l => (l.id === id ? { ...l, [field]: val } : l)) }));
+  function updateLinkField(id, field, value) {
+    setData(current => ({
+      ...current,
+      links: current.links.map(link => (link.id === id ? { ...link, [field]: value } : link)),
+    }));
   }
 
   async function saveLink(id) {
-    const link = data.links.find(l => l.id === id);
+    const link = data.links.find(item => item.id === id);
     if (!link) return;
     setSaving(true);
     try {
@@ -233,111 +228,94 @@ export default function EditorPage() {
   }
 
   async function toggleLink(id) {
-    const link = data.links.find(l => l.id === id);
-    const newActive = !link.active;
-    setData(d => ({
-      ...d,
-      links: d.links.map(l => (l.id === id ? { ...l, active: newActive } : l)),
+    const link = data.links.find(item => item.id === id);
+    if (!link) return;
+    const nextActive = !link.active;
+    setData(current => ({
+      ...current,
+      links: current.links.map(item => (item.id === id ? { ...item, active: nextActive } : item)),
     }));
     try {
       await api.toggleLink(id);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
   async function batchToggleLinks(ids) {
     try {
       const res = await api.batchToggleLinks(ids);
-      const map = Object.fromEntries(res.results.filter(r => r.success).map(r => [r.id, r.active]));
-      setData(d => ({
-        ...d,
-        links: d.links.map(l => (l.id in map ? { ...l, active: map[l.id] } : l)),
+      const map = Object.fromEntries(
+        res.results.filter(item => item.success).map(item => [item.id, item.active]),
+      );
+      setData(current => ({
+        ...current,
+        links: current.links.map(link =>
+          link.id in map ? { ...link, active: map[link.id] } : link,
+        ),
       }));
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
   async function batchDeleteLinks(ids) {
     try {
       await api.batchDeleteLinks(ids);
-      setData(d => ({ ...d, links: d.links.filter(l => !ids.includes(l.id)) }));
-    } catch (e) {
-      console.error(e);
+      setData(current => ({
+        ...current,
+        links: current.links.filter(link => !ids.includes(link.id)),
+      }));
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  // ── Bento tile config ──────────────────────────────────────────────────────
-
-  const currentTheme = THEMES.find(t => t.id === data.profile.theme_id);
+  const currentTheme = THEMES.find(item => item.id === data.profile.theme_id);
   const tiles = [
     {
       id: 'links',
       Icon: IconLinks,
-      title: 'Links',
-      detail: data.links.length
-        ? `${data.links.length} link${data.links.length !== 1 ? 's' : ''}`
-        : 'Add your first link',
+      title: 'Profile & Links',
+      detail: data.links.length ? `${data.links.length} 个外链入口` : '先编辑你的资料和第一条链接',
     },
     {
       id: 'appearance',
       Icon: IconAppearance,
-      title: 'Appearance',
-      detail: currentTheme?.label || 'Theme & social',
+      title: 'Visual System',
+      detail: currentTheme?.label || '选择公开页氛围与社交链接',
     },
-    {
-      id: 'nfc',
-      Icon: IconNfc,
-      title: 'NFC',
-      detail: 'Manage tap cards',
-    },
+    { id: 'nfc', Icon: IconNfc, title: 'NFC Cards', detail: '管理芯片绑定、状态和扫描入口' },
     {
       id: 'settings',
       Icon: IconSettings,
-      title: 'Settings',
-      detail: user?.email || 'Account',
+      title: 'Account',
+      detail: user?.email || '管理账号和密码',
     },
   ];
 
-  const tabTitles = { links: 'Links', appearance: 'Appearance', nfc: 'NFC', settings: 'Settings' };
-
-  // ── Back button ────────────────────────────────────────────────────────────
-
-  const backBtn = (
-    <button
-      onClick={() => setTab(null)}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5,
-        background: 'none',
-        border: 'none',
-        padding: '0 0 18px 0',
-        color: 'var(--c-text-3)',
-        fontSize: 13,
-        fontWeight: 500,
-        cursor: 'pointer',
-        fontFamily: 'var(--font-ui)',
-        letterSpacing: '-0.1px',
-      }}
-    >
-      ← Dashboard
-    </button>
-  );
-
-  // ── Left panel ─────────────────────────────────────────────────────────────
+  const tabTitles = {
+    links: 'Profile & Links',
+    appearance: 'Visual System',
+    nfc: 'NFC Cards',
+    settings: 'Account',
+  };
 
   const leftPanel =
     tab === null ? (
-      <div className="tab-content">
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 12,
-          }}
-        >
+      <section className="mono-panel">
+        <div className="mono-panel-header">
+          <div>
+            <div className="mono-kicker">Editor Home</div>
+            <h2>选择一个区域开始编辑</h2>
+          </div>
+          <span className="mono-badge">Live Preview</span>
+        </div>
+        <p className="mono-panel-meta" style={{ marginBottom: 18 }}>
+          我保留了编辑器的信息架构，但把入口收成更像专业控制台的样子。你应该一眼知道自己是在编辑资料、外观、NFC
+          还是账户，而不是在一个花哨界面里找功能。
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
           {tiles.map(tile => (
             <BentoTile
               key={tile.id}
@@ -348,16 +326,24 @@ export default function EditorPage() {
             />
           ))}
         </div>
-      </div>
+      </section>
     ) : (
-      <div key={tab} className="tab-content">
-        {backBtn}
+      <div className="mono-editor-column">
+        <button
+          className="mono-btn-ghost"
+          style={{ justifyContent: 'flex-start' }}
+          onClick={() => setTab(null)}
+        >
+          返回编辑导航
+        </button>
 
         {tab === 'links' && (
           <>
             <ProfileEditor
               profile={data.profile}
-              onChange={patch => setData(d => ({ ...d, profile: { ...d.profile, ...patch } }))}
+              onChange={patch =>
+                setData(current => ({ ...current, profile: { ...current.profile, ...patch } }))
+              }
               onPatch={patchProfile}
             />
             <LinkList
@@ -383,7 +369,9 @@ export default function EditorPage() {
             />
             <SocialLinksEditor
               socials={data.socials}
-              onChange={patch => setData(d => ({ ...d, socials: { ...d.socials, ...patch } }))}
+              onChange={patch =>
+                setData(current => ({ ...current, socials: { ...current.socials, ...patch } }))
+              }
               onPatch={patchSocials}
             />
             <Card>
@@ -401,14 +389,17 @@ export default function EditorPage() {
                   onClick={() => patchProfile({ show_embed: !data.profile.show_embed })}
                 />
               </div>
-              <FormField label="Embed URL (iframe src)">
+              <FormField label="Embed URL">
                 <LightInput
                   value={data.profile.embed_url}
-                  onChange={e =>
-                    setData(d => ({ ...d, profile: { ...d.profile, embed_url: e.target.value } }))
+                  onChange={event =>
+                    setData(current => ({
+                      ...current,
+                      profile: { ...current.profile, embed_url: event.target.value },
+                    }))
                   }
-                  onBlur={e => patchProfile({ embed_url: e.target.value })}
-                  placeholder="Spotify / YouTube embed URL"
+                  onBlur={event => patchProfile({ embed_url: event.target.value })}
+                  placeholder="Spotify / YouTube iframe 地址"
                 />
               </FormField>
             </Card>
@@ -420,175 +411,97 @@ export default function EditorPage() {
       </div>
     );
 
-  // ── Right panel (preview phone) ────────────────────────────────────────────
-
-  const rightPanel = (
-    <div
-      style={{
-        position: 'sticky',
-        top: 72,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: '100%',
-      }}
-    >
-      <div
-        style={{
-          width: 260,
-          borderRadius: 40,
-          background: '#111',
-          padding: '10px 8px 14px',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.08)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-          <div
-            style={{
-              width: 64,
-              height: 16,
-              background: '#000',
-              borderRadius: '0 0 10px 10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <div style={{ width: 36, height: 3, background: '#333', borderRadius: 2 }} />
-          </div>
-        </div>
-        <div style={{ height: 480, borderRadius: 30, overflow: 'hidden' }}>
-          <ProfilePreview data={{ ...data, links: data.links.filter(l => l.active) }} />
-        </div>
-      </div>
-      <div style={{ marginTop: 12, fontSize: 12, color: 'var(--c-text-3)', textAlign: 'center' }}>
-        linkhub.app/
-        <span style={{ color: 'var(--c-text)', fontWeight: 600 }}>{user?.username}</span>
-      </div>
-      <button
-        onClick={() => window.open(`/${user?.username}`, '_blank')}
-        style={{ ...navBtnStyle, marginTop: 10, width: '100%', justifyContent: 'center' }}
-      >
-        ↗ Open public page
-      </button>
-    </div>
-  );
-
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'var(--c-bg)',
-        fontFamily: 'var(--font-ui)',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {/* ── HEADER ── */}
-      <header
-        style={{
-          background: 'var(--c-surface)',
-          borderBottom: '1px solid var(--c-border-light)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: isMobile ? '0 16px' : '0 28px',
-          height: 52,
-          flexShrink: 0,
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-        }}
-      >
-        {/* Left: Logo + breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div
-            style={{
-              width: 26,
-              height: 26,
-              background: 'var(--c-accent)',
-              borderRadius: 7,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span style={{ color: '#fff', fontSize: 13, fontWeight: 700, lineHeight: 1 }}>L</span>
-          </div>
-          <span
-            style={{
-              fontSize: 15,
-              fontWeight: 700,
-              color: 'var(--c-text)',
-              letterSpacing: '-0.3px',
-              fontFamily: 'var(--font-display)',
-            }}
-          >
-            LinkHub
-          </span>
-          {tab && !isMobile && (
-            <>
-              <span style={{ color: 'var(--c-text-3)', fontSize: 13 }}>/</span>
-              <span style={{ fontSize: 13, color: 'var(--c-text-2)', fontWeight: 500 }}>
-                {tabTitles[tab]}
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* Right: save indicator + share + avatar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {saveMsg && (
-            <span
-              style={{
-                fontSize: 12,
-                color: saving ? 'var(--c-warning)' : 'var(--c-success)',
-                fontWeight: 500,
+    <AppShell>
+      <AppTopbar
+        title="Editor"
+        subtitle={tab ? tabTitles[tab] : '公开页与 NFC 名片编辑器'}
+        actions={
+          <>
+            {saveMsg && <span className="mono-badge">{saving ? `${saveMsg}...` : saveMsg}</span>}
+            <button
+              className="mono-btn-ghost"
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/${user?.username}`);
+                saved('Copied');
               }}
             >
-              {saveMsg}
-            </span>
-          )}
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/${user?.username}`);
-              saved('Copied');
-            }}
-            style={navBtnStyle}
-          >
-            <ShareIcon /> Share
-          </button>
-          <div
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: '50%',
-              overflow: 'hidden',
-              border: '1px solid var(--c-border)',
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              logout();
-              navigate('/login');
-            }}
-            title="Sign out"
-          >
-            <img
-              src={
-                data.profile.avatar_url ||
-                `https://api.dicebear.com/7.x/adventurer/svg?seed=${data.profile.avatar_seed}&backgroundColor=b6e3f4,c0aede`
-              }
-              alt="avatar"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </div>
-        </div>
-      </header>
+              <ShareIcon /> 分享
+            </button>
+            <button className="mono-btn-muted" onClick={() => navigate('/dashboard')}>
+              返回总览
+            </button>
+            <button
+              className="mono-btn"
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+            >
+              退出
+            </button>
+          </>
+        }
+      />
 
-      {/* ── MAIN ── */}
-      <EditorLayout leftPanel={leftPanel} rightPanel={rightPanel} />
-    </div>
+      <main className="mono-main">
+        <section className="mono-panel" style={{ marginBottom: 20 }}>
+          <div className="mono-kicker">Editing System</div>
+          <h1 style={{ margin: '14px 0 10px', fontSize: '2.8rem', letterSpacing: '-0.06em' }}>
+            编辑器也应该像一套高端产品，而不是功能堆叠。
+          </h1>
+          <p className="mono-copy">
+            我把它收成了单色工作台。左边负责编辑，右边持续预览，入口只保留最关键的四块，减少视觉分裂。
+          </p>
+        </section>
+
+        <div className="mono-editor-layout">
+          <div className="mono-editor-column">{leftPanel}</div>
+
+          <aside className="mono-editor-preview">
+            <div className="mono-preview-shell">
+              <div className="mono-preview-device">
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                  <div
+                    style={{
+                      width: 72,
+                      height: 18,
+                      background: '#020202',
+                      borderRadius: '0 0 12px 12px',
+                    }}
+                  />
+                </div>
+                <div className="mono-preview-screen">
+                  <ProfilePreview
+                    data={{ ...data, links: data.links.filter(link => link.active) }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mono-panel" style={{ padding: 18 }}>
+              <div className="mono-kicker">Public URL</div>
+              <div
+                style={{
+                  marginTop: 10,
+                  fontWeight: 700,
+                  letterSpacing: '-0.03em',
+                  wordBreak: 'break-all',
+                }}
+              >
+                {window.location.origin}/{user?.username}
+              </div>
+              <button
+                className="mono-btn-muted"
+                style={{ marginTop: 14, width: '100%' }}
+                onClick={() => window.open(`/${user?.username}`, '_blank')}
+              >
+                打开公开页
+              </button>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </AppShell>
   );
 }

@@ -35,28 +35,36 @@ export default function SettingsPanel({ user }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <Card>
-        <SectionTitle>账号信息</SectionTitle>
+        <div>
+          <div className="mono-kicker">Account</div>
+          <SectionTitle style={{ marginTop: 8 }}>账号信息</SectionTitle>
+        </div>
         <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column' }}>
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               padding: '11px 0',
-              borderBottom: '1px solid #f3f4f6',
+              borderBottom: '1px solid rgba(15, 15, 15, 0.08)',
             }}
           >
-            <span style={{ fontSize: 14, color: '#6b7280' }}>用户名</span>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>@{user?.username}</span>
+            <span style={{ fontSize: 14, color: 'var(--mono-text-muted)' }}>用户名</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--mono-text)' }}>
+              @{user?.username}
+            </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0' }}>
-            <span style={{ fontSize: 14, color: '#6b7280' }}>邮箱</span>
-            <span style={{ fontSize: 14, color: '#374151' }}>{user?.email}</span>
+            <span style={{ fontSize: 14, color: 'var(--mono-text-muted)' }}>邮箱</span>
+            <span style={{ fontSize: 14, color: 'var(--mono-text-soft)' }}>{user?.email}</span>
           </div>
         </div>
       </Card>
 
       <Card>
-        <SectionTitle>修改密码</SectionTitle>
+        <div>
+          <div className="mono-kicker">Security</div>
+          <SectionTitle style={{ marginTop: 8 }}>修改密码</SectionTitle>
+        </div>
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
           <FormField label="当前密码">
             <LightInput
@@ -86,29 +94,29 @@ export default function SettingsPanel({ user }) {
           {err && (
             <div
               style={{
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
-                borderRadius: 8,
+                background: 'rgba(15,15,15,0.04)',
+                border: '1px solid rgba(15,15,15,0.1)',
+                borderRadius: 18,
                 padding: '10px 14px',
                 fontSize: 13,
-                color: '#dc2626',
+                color: 'var(--mono-text)',
               }}
             >
-              ⚠ {err}
+              {err}
             </div>
           )}
           {msg && (
             <div
               style={{
-                background: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                borderRadius: 8,
+                background: 'rgba(255,255,255,0.72)',
+                border: '1px solid rgba(15,15,15,0.1)',
+                borderRadius: 18,
                 padding: '10px 14px',
                 fontSize: 13,
-                color: '#16a34a',
+                color: 'var(--mono-text)',
               }}
             >
-              ✓ {msg}
+              {msg}
             </div>
           )}
 

@@ -6,6 +6,7 @@ import './styles/apple.css';
 import './styles/minimalism.css';
 import './styles/textures.css';
 import './styles/dashboard-design-system.css';
+import './styles/monochrome-luxe.css';
 
 // 使用懒加载提高初始加载速度
 const AuthPage = lazy(() => import('./pages/AuthPage'));
@@ -38,8 +39,8 @@ function PrivateRoute({ children }) {
           alignItems: 'center',
           justifyContent: 'center',
           height: '100vh',
-          color: '#555',
-          fontFamily: 'DM Sans, sans-serif',
+          color: 'var(--mono-text-soft)',
+          fontFamily: 'var(--font-ui)',
         }}
       >
         加载中...
@@ -57,8 +58,8 @@ function LoadingFallback() {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        color: '#555',
-        fontFamily: 'DM Sans, sans-serif',
+        color: 'var(--mono-text-soft)',
+        fontFamily: 'var(--font-ui)',
       }}
     >
       加载页面中...

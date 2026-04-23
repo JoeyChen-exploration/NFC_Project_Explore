@@ -1,293 +1,443 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
-import '../styles/dashboard-design-system.css';
+import { AppShell, AppTopbar } from '../components/AppShell';
 
-/**
- * 简化但有效的Dashboard
- * 直接应用设计系统工具类
- */
+const EMPTY_FORM = {
+  card_name: '',
+  card_serial: '',
+};
+
+function formatDate(value) {
+  if (!value) return '尚未使用';
+
+  try {
+    return new Intl.DateTimeFormat('zh-CN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(value));
+  } catch {
+    return value;
+  }
+}
+
+function normalizeSerial(value) {
+  return value
+    .toUpperCase()
+    .replace(/[^A-F0-9:]/g, '')
+    .replace(/:{2,}/g, ':')
+    .replace(/^:|:$/g, '');
+}
+
+function isValidCardSerial(value) {
+  return /^[A-F0-9:]{4,32}$/.test(value);
+}
+
+function getPublicProfileUrl(username) {
+  if (!username) return '';
+  return `${window.location.origin}/${username}`;
+}
+
+function getNfcRedirectUrl(serial) {
+  if (!serial) return '';
+  const frontendOrigin = window.location.origin;
+  const backendOrigin = frontendOrigin.includes(':5173') ? 'http://localhost:3001' : frontendOrigin;
+  return `${backendOrigin}/nfc/${serial}`;
+}
+
+function Stat({ label, value, note }) {
+  return (
+    <div className="mono-stat">
+      <div className="mono-kicker">{label}</div>
+      <strong>{value}</strong>
+      <span>{note}</span>
+    </div>
+  );
+}
+
 export default function SimpleDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-
   const [cards, setCards] = useState([]);
+  const [nfcStats, setNfcStats] = useState(null);
+  const [webStats, setWebStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [newCard, setNewCard] = useState({ name: '' });
+  const [refreshing, setRefreshing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [banner, setBanner] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  const username = user?.username || '';
+  const profileUrl = useMemo(() => getPublicProfileUrl(username), [username]);
+  const totalScans = nfcStats?.summary?.total_scans || 0;
+  const totalCards = nfcStats?.summary?.total_cards || cards.length;
+  const activeCards = nfcStats?.summary?.active_cards || 0;
+  const totalViews = webStats?.summary?.total_page_views || 0;
+  const totalClicks = webStats?.summary?.total_link_clicks || 0;
+  const clickRate = totalViews > 0 ? `${Math.round((totalClicks / totalViews) * 100)}%` : '0%';
+  const mostUsedCard = cards.reduce(
+    (best, card) => ((card.scan_count || 0) > (best?.scan_count || 0) ? card : best),
+    null,
+  );
 
   useEffect(() => {
-    loadData();
+    loadDashboard();
   }, []);
 
-  const loadData = async () => {
+  useEffect(() => {
+    if (!banner) return undefined;
+    const timer = window.setTimeout(() => setBanner(null), 2800);
+    return () => window.clearTimeout(timer);
+  }, [banner]);
+
+  async function loadDashboard({ silent = false } = {}) {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
-      const res = await api.get('/api/nfc/cards');
-      setCards(res.data || []);
+      const [cardsRes, nfcRes, webRes] = await Promise.all([
+        api.getNfcCards(),
+        api.getNfcAnalytics(),
+        api.getAnalytics(),
+      ]);
+      setCards(cardsRes.cards || []);
+      setNfcStats(nfcRes);
+      setWebStats(webRes);
     } catch (error) {
-      console.error('加载失败:', error);
+      setBanner({ type: 'error', message: error.message || '加载仪表板失败' });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }
 
-  const handleCreate = async e => {
-    e.preventDefault();
-    if (!newCard.name.trim()) return;
+  async function handleCreateCard(event) {
+    event.preventDefault();
+    const card_name = form.card_name.trim();
+    const card_serial = normalizeSerial(form.card_serial);
 
+    if (!card_name) {
+      setBanner({ type: 'error', message: '请填写卡片名称。' });
+      return;
+    }
+
+    if (!isValidCardSerial(card_serial)) {
+      setBanner({ type: 'error', message: '序列号格式不对，示例：04:A1:BC:9F。' });
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      await api.post('/api/nfc/cards', {
-        name: newCard.name,
-        serialNumber: `NFC-${Date.now()}`,
-        redirectUrl: `/${user?.username || 'user'}`,
-      });
-      setNewCard({ name: '' });
-      await loadData();
-      alert('卡片创建成功！');
+      await api.bindNfcCard({ card_name, card_serial });
+      setForm(EMPTY_FORM);
+      setBanner({ type: 'success', message: 'NFC 卡片绑定成功。' });
+      await loadDashboard({ silent: true });
     } catch (error) {
-      console.error('创建失败:', error);
-      alert('创建失败');
+      setBanner({ type: 'error', message: error.message || '绑定卡片失败' });
+    } finally {
+      setSubmitting(false);
     }
-  };
+  }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-color-bg p-8">
-        <div className="container mx-auto">
-          <div className="skeleton-card">
-            <div className="skeleton-text w-1/4 mb-4"></div>
-            <div className="skeleton-text"></div>
-          </div>
-        </div>
-      </div>
-    );
+  async function handleCopy(label, value) {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setBanner({ type: 'success', message: `${label}已复制。` });
+    } catch {
+      setBanner({ type: 'error', message: `复制${label}失败，请手动复制。` });
+    }
+  }
+
+  async function handleToggleCard(card) {
+    try {
+      await api.updateNfcCard(card.id, { active: !card.active });
+      await loadDashboard({ silent: true });
+      setBanner({ type: 'success', message: `${card.card_name} 已更新状态。` });
+    } catch (error) {
+      setBanner({ type: 'error', message: error.message || '更新卡片状态失败' });
+    }
+  }
+
+  async function handleDeleteCard(cardId) {
+    try {
+      await api.deleteNfcCard(cardId);
+      await loadDashboard({ silent: true });
+      setBanner({ type: 'success', message: '卡片已解绑。' });
+    } catch (error) {
+      setBanner({ type: 'error', message: error.message || '解绑卡片失败' });
+    }
+  }
+
+  function handleLogout() {
+    logout();
+    navigate('/login');
   }
 
   return (
-    <div className="min-h-screen bg-color-bg">
-      {/* 顶部导航 */}
-      <header className="bg-white border-b border-color-border shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">N</span>
+    <AppShell>
+      <AppTopbar
+        title="Dashboard"
+        subtitle={username ? `@${username} 的 NFC 分发总览` : 'NFC dashboard'}
+        actions={
+          <>
+            <button className="mono-btn-ghost" onClick={() => navigate('/analytics')}>
+              分析
+            </button>
+            <button className="mono-btn-muted" onClick={() => navigate('/editor')}>
+              编辑主页
+            </button>
+            <button className="mono-btn-ghost" onClick={() => loadDashboard({ silent: true })}>
+              {refreshing ? '刷新中...' : '刷新'}
+            </button>
+            <button className="mono-btn" onClick={handleLogout}>
+              退出
+            </button>
+          </>
+        }
+      />
+
+      <main className="mono-main">
+        <section className="mono-panel" style={{ marginBottom: 20 }}>
+          <div className="mono-grid-2">
+            <div>
+              <div className="mono-kicker">NFC Identity Control</div>
+              <h1 style={{ margin: '14px 0 12px', fontSize: '3rem', letterSpacing: '-0.06em' }}>
+                这是你的分发中枢，不只是一个主页后台。
+              </h1>
+              <p className="mono-copy">
+                现在这套 dashboard 已经围绕真实业务链路来组织：公开页、NFC
+                卡片、扫描和点击都在同一个界面里协作，而不是被拆成几块松散的功能。
+              </p>
+              <div
+                className="mono-actions-inline"
+                style={{ justifyContent: 'flex-start', marginTop: 24 }}
+              >
+                <button className="mono-btn" onClick={() => navigate('/editor')}>
+                  继续完善主页
+                </button>
+                <button
+                  className="mono-btn-muted"
+                  onClick={() => handleCopy('主页链接', profileUrl)}
+                >
+                  复制主页链接
+                </button>
+                <button
+                  className="mono-btn-ghost"
+                  onClick={() => window.open(profileUrl, '_blank')}
+                >
+                  打开公开页
+                </button>
               </div>
-              <span className="text-xl font-bold text-color-text-primary">LinkHub NFC</span>
             </div>
 
-            <div className="flex items-center gap-4">
-              <button onClick={() => navigate('/dashboard')} className="btn btn-ghost">
-                仪表板
-              </button>
-              <button onClick={() => navigate('/editor')} className="btn btn-ghost">
-                编辑器
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center text-white">
-                  {user?.username?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                <span className="text-color-text-primary">{user?.username}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        {/* 欢迎区域 */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-color-text-primary mb-2">
-            欢迎回来，{user?.username}！
-          </h1>
-          <p className="text-color-text-secondary">管理你的NFC电子名片</p>
-        </div>
-
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="card hover-lift">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-2xl">📊</span>
-                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                  今日
-                </span>
-              </div>
-              <div className="text-3xl font-bold text-color-text-primary mb-2">0</div>
-              <div className="text-sm text-color-text-secondary">今日扫描</div>
-            </div>
-          </div>
-
-          <div className="card hover-lift">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-2xl">📱</span>
-                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                  总计
-                </span>
-              </div>
-              <div className="text-3xl font-bold text-color-text-primary mb-2">0</div>
-              <div className="text-sm text-color-text-secondary">总扫描次数</div>
-            </div>
-          </div>
-
-          <div className="card hover-lift">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-2xl">👥</span>
-                <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
-                  独立
-                </span>
-              </div>
-              <div className="text-3xl font-bold text-color-text-primary mb-2">0</div>
-              <div className="text-sm text-color-text-secondary">独立设备</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 创建卡片 */}
-          <div className="lg:col-span-2">
-            <div className="card">
-              <div className="card-header">
-                <h2 className="text-xl font-semibold text-color-text-primary">创建NFC卡片</h2>
-              </div>
-
-              <div className="card-body">
-                <form onSubmit={handleCreate} className="space-y-4">
-                  <div className="form-group">
-                    <label className="form-label">卡片名称 *</label>
-                    <input
-                      type="text"
-                      value={newCard.name}
-                      onChange={e => setNewCard({ ...newCard, name: e.target.value })}
-                      placeholder="例如：商务名片"
-                      className="form-input"
-                    />
-                    <div className="form-help">建议使用简洁明了的名称</div>
+            <div className="mono-panel" style={{ background: 'rgba(255,255,255,0.56)' }}>
+              <div className="mono-kicker">Current Signal</div>
+              <h2 style={{ margin: '14px 0 8px', fontSize: '2rem', letterSpacing: '-0.05em' }}>
+                {totalCards > 0 ? '已经可以开始分发' : '先绑定第一张卡片'}
+              </h2>
+              <p className="mono-panel-meta">
+                {mostUsedCard
+                  ? `目前最常用的是 ${mostUsedCard.card_name}，累计 ${mostUsedCard.scan_count || 0} 次扫描。`
+                  : '先打通第一条真实链路：卡片绑定、NFC 跳转、主页访问和链接点击。'}
+              </p>
+              <div className="mono-list-row" style={{ marginTop: 20 }}>
+                <div className="mono-list-row-main">
+                  <div className="mono-kicker">Public Page</div>
+                  <div className="mono-note" style={{ marginTop: 6, wordBreak: 'break-all' }}>
+                    {profileUrl || '登录后自动生成公开主页地址'}
                   </div>
+                </div>
+                <div className="mono-badge">{clickRate} CTR</div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                  <div className="flex gap-4">
-                    <button type="submit" className="btn btn-primary">
-                      创建卡片
+        {banner && (
+          <div
+            className={`mono-alert ${banner.type === 'error' ? 'is-error' : 'is-success'}`}
+            style={{ marginBottom: 20 }}
+          >
+            {banner.message}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="mono-panel" style={{ textAlign: 'center' }}>
+            <div className="loading-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div className="mono-note" style={{ marginTop: 12 }}>
+              正在整理你的 NFC 数据...
+            </div>
+          </div>
+        ) : (
+          <>
+            <section className="mono-grid-4" style={{ marginBottom: 20 }}>
+              <Stat label="Cards" value={totalCards} note="绑定的 NFC 卡片" />
+              <Stat label="Active" value={activeCards} note="当前激活的卡片" />
+              <Stat label="Scans" value={totalScans} note="累计 NFC 扫描" />
+              <Stat
+                label="Views / Clicks"
+                value={`${totalViews} / ${totalClicks}`}
+                note="公开页访问与点击"
+              />
+            </section>
+
+            <section className="mono-grid-2">
+              <div className="mono-panel">
+                <div className="mono-panel-header">
+                  <div>
+                    <div className="mono-kicker">Bind New Card</div>
+                    <h2>把真实卡片接入系统</h2>
+                  </div>
+                  <span className="mono-badge">Max 20</span>
+                </div>
+                <p className="mono-panel-meta">
+                  保持流程简单但真实可用。输入卡片名称和芯片序列号后，就能开始追踪扫描表现。
+                </p>
+
+                <form className="mono-stack" style={{ marginTop: 20 }} onSubmit={handleCreateCard}>
+                  <div className="mono-field">
+                    <label>Card Name</label>
+                    <input
+                      className="mono-input"
+                      value={form.card_name}
+                      placeholder="例如：商务交换卡"
+                      onChange={event =>
+                        setForm(current => ({ ...current, card_name: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="mono-field">
+                    <label>Card Serial</label>
+                    <input
+                      className="mono-input"
+                      value={form.card_serial}
+                      placeholder="例如：04:A1:BC:9F"
+                      onChange={event =>
+                        setForm(current => ({
+                          ...current,
+                          card_serial: normalizeSerial(event.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="mono-note">
+                    支持十六进制和冒号格式。之后可以把 `/nfc/serial` 写入芯片。
+                  </div>
+                  <div className="mono-actions-inline" style={{ justifyContent: 'flex-start' }}>
+                    <button className="mono-btn" type="submit" disabled={submitting}>
+                      {submitting ? '绑定中...' : '绑定卡片'}
                     </button>
                     <button
+                      className="mono-btn-ghost"
                       type="button"
-                      className="btn btn-outline"
-                      onClick={() => setNewCard({ name: '' })}
+                      onClick={() => setForm(EMPTY_FORM)}
                     >
-                      重置
+                      清空
                     </button>
                   </div>
                 </form>
               </div>
-            </div>
 
-            {/* 卡片列表 */}
-            <div className="card mt-8">
-              <div className="card-header">
-                <h2 className="text-xl font-semibold text-color-text-primary">
-                  我的卡片 ({cards.length})
-                </h2>
+              <div className="mono-panel">
+                <div className="mono-panel-header">
+                  <div>
+                    <div className="mono-kicker">Direction</div>
+                    <h2>接下来最值得推进的地方</h2>
+                  </div>
+                </div>
+                <div className="mono-stack">
+                  <div className="mono-surface" style={{ padding: 18, borderRadius: 20 }}>
+                    <strong>先把公开页打磨成能承接注意力的页面。</strong>
+                    <div className="mono-note" style={{ marginTop: 6 }}>
+                      NFC 被扫之后，真正留住用户的是公开页，不是后台。
+                    </div>
+                  </div>
+                  <div className="mono-surface" style={{ padding: 18, borderRadius: 20 }}>
+                    <strong>不同场景对应不同卡片。</strong>
+                    <div className="mono-note" style={{ marginTop: 6 }}>
+                      展会卡、销售卡、品牌卡，应该被当作不同触达入口来运营。
+                    </div>
+                  </div>
+                  <div className="mono-surface" style={{ padding: 18, borderRadius: 20 }}>
+                    <strong>把分析页变成决策页。</strong>
+                    <div className="mono-note" style={{ marginTop: 6 }}>
+                      看趋势、看卡片、看点击，最后指向的是“哪种内容最有效”。
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mono-panel" style={{ marginTop: 20 }}>
+              <div className="mono-panel-header">
+                <div>
+                  <div className="mono-kicker">Bound Cards</div>
+                  <h2>已绑定卡片</h2>
+                </div>
+                <span className="mono-badge">{cards.length} 张</span>
               </div>
 
-              <div className="card-body">
-                {cards.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-4xl mb-4">📇</div>
-                    <p className="text-color-text-secondary mb-2">还没有NFC卡片</p>
-                    <p className="text-sm text-color-text-tertiary">创建你的第一张NFC卡片</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {cards.map(card => (
-                      <div
-                        key={card.id}
-                        className="border border-color-border rounded-lg p-4 hover:bg-color-surface-2 transition-colors"
-                      >
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h3 className="font-medium text-color-text-primary">{card.name}</h3>
-                            <div className="mt-2 text-sm text-color-text-secondary">
-                              序列号: {card.serial_number}
-                            </div>
-                          </div>
-                          <button className="btn btn-outline text-sm">复制链接</button>
+              {cards.length === 0 ? (
+                <div className="mono-note">
+                  还没有 NFC 卡片。绑定第一张之后，这个产品的价值会立刻具体起来。
+                </div>
+              ) : (
+                <div className="mono-list">
+                  {cards.map(card => (
+                    <article key={card.id} className="mono-list-row">
+                      <div className="mono-list-row-main">
+                        <div className="mono-list-row-title">
+                          <h3>{card.card_name}</h3>
+                          <span className={`mono-status ${card.active ? 'is-live' : ''}`}>
+                            {card.active ? '已启用' : '已停用'}
+                          </span>
+                        </div>
+                        <div className="mono-list-row-meta">
+                          <span>序列号 {card.card_serial}</span>
+                          <span>{card.scan_count || 0} 次扫描</span>
+                          <span>{formatDate(card.last_used_at)}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
 
-          {/* 侧边栏 */}
-          <div>
-            <div className="card mb-8">
-              <div className="card-header">
-                <h3 className="font-semibold text-color-text-primary">快速操作</h3>
-              </div>
-
-              <div className="card-body space-y-4">
-                <button
-                  onClick={() => navigate('/editor')}
-                  className="w-full flex items-center justify-between p-3 border border-color-border rounded-lg hover:bg-color-surface-2 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">✏️</span>
-                    <span>编辑个人主页</span>
-                  </div>
-                  <span>→</span>
-                </button>
-
-                <button
-                  onClick={() => navigate('/analytics')}
-                  className="w-full flex items-center justify-between p-3 border border-color-border rounded-lg hover:bg-color-surface-2 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">📊</span>
-                    <span>查看详细分析</span>
-                  </div>
-                  <span>→</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-header">
-                <h3 className="font-semibold text-color-text-primary">使用指南</h3>
-              </div>
-
-              <div className="card-body space-y-3">
-                <div className="flex items-start gap-3">
-                  <span className="text-xl">1️⃣</span>
-                  <div>
-                    <div className="font-medium text-color-text-primary">创建卡片</div>
-                    <div className="text-sm text-color-text-secondary">填写名称创建NFC卡片</div>
-                  </div>
+                      <div className="mono-actions-inline">
+                        <button
+                          className="mono-btn-ghost"
+                          onClick={() =>
+                            handleCopy('卡片跳转地址', getNfcRedirectUrl(card.card_serial))
+                          }
+                        >
+                          复制跳转地址
+                        </button>
+                        <button className="mono-btn-muted" onClick={() => handleToggleCard(card)}>
+                          {card.active ? '停用' : '启用'}
+                        </button>
+                        <button
+                          className="mono-btn-ghost"
+                          onClick={() => handleDeleteCard(card.id)}
+                        >
+                          解绑
+                        </button>
+                      </div>
+                    </article>
+                  ))}
                 </div>
-
-                <div className="flex items-start gap-3">
-                  <span className="text-xl">2️⃣</span>
-                  <div>
-                    <div className="font-medium text-color-text-primary">分享链接</div>
-                    <div className="text-sm text-color-text-secondary">复制链接分享给他人</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+              )}
+            </section>
+          </>
+        )}
       </main>
-
-      <footer className="mt-12 border-t border-color-border py-8">
-        <div className="container mx-auto px-4">
-          <div className="text-center text-color-text-secondary text-sm">
-            © 2026 LinkHub NFC. 专为NFC电子名片设计。
-          </div>
-        </div>
-      </footer>
-    </div>
+    </AppShell>
   );
 }
