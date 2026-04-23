@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { AppShell, AppTopbar } from '../components/AppShell';
+import { useI18n } from '../hooks/useI18n';
 
 const EMPTY_FORM = {
   card_name: '',
   card_serial: '',
 };
 
-function formatDate(value) {
-  if (!value) return '尚未使用';
+function formatDate(value, locale) {
+  if (!value) return locale === 'zh' ? '尚未使用' : 'Not used yet';
 
   try {
-    return new Intl.DateTimeFormat('zh-CN', {
+    return new Intl.DateTimeFormat(locale === 'zh' ? 'zh-CN' : 'en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -60,6 +61,7 @@ function Stat({ label, value, note }) {
 
 export default function SimpleDashboard() {
   const { user, logout } = useAuth();
+  const { tc, locale } = useI18n();
   const navigate = useNavigate();
   const [cards, setCards] = useState([]);
   const [nfcStats, setNfcStats] = useState(null);
@@ -110,7 +112,10 @@ export default function SimpleDashboard() {
       setNfcStats(nfcRes);
       setWebStats(webRes);
     } catch (error) {
-      setBanner({ type: 'error', message: error.message || '加载仪表板失败' });
+      setBanner({
+        type: 'error',
+        message: error.message || tc('加载仪表板失败', 'Failed to load dashboard'),
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -123,12 +128,18 @@ export default function SimpleDashboard() {
     const card_serial = normalizeSerial(form.card_serial);
 
     if (!card_name) {
-      setBanner({ type: 'error', message: '请填写卡片名称。' });
+      setBanner({ type: 'error', message: tc('请填写卡片名称。', 'Please enter a card name.') });
       return;
     }
 
     if (!isValidCardSerial(card_serial)) {
-      setBanner({ type: 'error', message: '序列号格式不对，示例：04:A1:BC:9F。' });
+      setBanner({
+        type: 'error',
+        message: tc(
+          '序列号格式不对，示例：04:A1:BC:9F。',
+          'Invalid serial format, e.g. 04:A1:BC:9F.',
+        ),
+      });
       return;
     }
 
@@ -136,10 +147,16 @@ export default function SimpleDashboard() {
     try {
       await api.bindNfcCard({ card_name, card_serial });
       setForm(EMPTY_FORM);
-      setBanner({ type: 'success', message: 'NFC 卡片绑定成功。' });
+      setBanner({
+        type: 'success',
+        message: tc('NFC 卡片绑定成功。', 'NFC card bound successfully.'),
+      });
       await loadDashboard({ silent: true });
     } catch (error) {
-      setBanner({ type: 'error', message: error.message || '绑定卡片失败' });
+      setBanner({
+        type: 'error',
+        message: error.message || tc('绑定卡片失败', 'Failed to bind card'),
+      });
     } finally {
       setSubmitting(false);
     }
@@ -149,9 +166,15 @@ export default function SimpleDashboard() {
     if (!value) return;
     try {
       await navigator.clipboard.writeText(value);
-      setBanner({ type: 'success', message: `${label}已复制。` });
+      setBanner({ type: 'success', message: tc(`${label}已复制。`, `${label} copied.`) });
     } catch {
-      setBanner({ type: 'error', message: `复制${label}失败，请手动复制。` });
+      setBanner({
+        type: 'error',
+        message: tc(
+          `复制${label}失败，请手动复制。`,
+          `Failed to copy ${label}. Please copy manually.`,
+        ),
+      });
     }
   }
 
@@ -159,9 +182,15 @@ export default function SimpleDashboard() {
     try {
       await api.updateNfcCard(card.id, { active: !card.active });
       await loadDashboard({ silent: true });
-      setBanner({ type: 'success', message: `${card.card_name} 已更新状态。` });
+      setBanner({
+        type: 'success',
+        message: tc(`${card.card_name} 已更新状态。`, `${card.card_name} status updated.`),
+      });
     } catch (error) {
-      setBanner({ type: 'error', message: error.message || '更新卡片状态失败' });
+      setBanner({
+        type: 'error',
+        message: error.message || tc('更新卡片状态失败', 'Failed to update card status'),
+      });
     }
   }
 
@@ -169,9 +198,12 @@ export default function SimpleDashboard() {
     try {
       await api.deleteNfcCard(cardId);
       await loadDashboard({ silent: true });
-      setBanner({ type: 'success', message: '卡片已解绑。' });
+      setBanner({ type: 'success', message: tc('卡片已解绑。', 'Card unbound.') });
     } catch (error) {
-      setBanner({ type: 'error', message: error.message || '解绑卡片失败' });
+      setBanner({
+        type: 'error',
+        message: error.message || tc('解绑卡片失败', 'Failed to unbind card'),
+      });
     }
   }
 
@@ -184,20 +216,24 @@ export default function SimpleDashboard() {
     <AppShell>
       <AppTopbar
         title="Dashboard"
-        subtitle={username ? `@${username} 的 NFC 分发总览` : 'NFC dashboard'}
+        subtitle={
+          username
+            ? tc(`@${username} 的 NFC 分发总览`, `@${username} NFC distribution overview`)
+            : 'NFC dashboard'
+        }
         actions={
           <>
             <button className="mono-btn-ghost" onClick={() => navigate('/analytics')}>
-              分析
+              {tc('分析', 'Analytics')}
             </button>
             <button className="mono-btn-muted" onClick={() => navigate('/editor')}>
-              编辑主页
+              {tc('编辑主页', 'Edit page')}
             </button>
             <button className="mono-btn-ghost" onClick={() => loadDashboard({ silent: true })}>
-              {refreshing ? '刷新中...' : '刷新'}
+              {refreshing ? tc('刷新中...', 'Refreshing...') : tc('刷新', 'Refresh')}
             </button>
             <button className="mono-btn" onClick={handleLogout}>
-              退出
+              {tc('退出', 'Logout')}
             </button>
           </>
         }
@@ -209,26 +245,29 @@ export default function SimpleDashboard() {
             <div>
               <div className="mono-kicker">NFC Identity Control</div>
               <h1 style={{ margin: '14px 0 12px', fontSize: '3rem', letterSpacing: '-0.06em' }}>
-                这是你的分发中枢，不只是一个主页后台。
+                {tc(
+                  '这是你的分发中枢，不只是一个主页后台。',
+                  'This is your distribution hub, not just a page admin.',
+                )}
               </h1>
               <div
                 className="mono-actions-inline"
                 style={{ justifyContent: 'flex-start', marginTop: 24 }}
               >
                 <button className="mono-btn" onClick={() => navigate('/editor')}>
-                  继续完善主页
+                  {tc('继续完善主页', 'Continue editing page')}
                 </button>
                 <button
                   className="mono-btn-muted"
-                  onClick={() => handleCopy('主页链接', profileUrl)}
+                  onClick={() => handleCopy(tc('主页链接', 'profile URL'), profileUrl)}
                 >
-                  复制主页链接
+                  {tc('复制主页链接', 'Copy profile URL')}
                 </button>
                 <button
                   className="mono-btn-ghost"
                   onClick={() => window.open(profileUrl, '_blank')}
                 >
-                  打开公开页
+                  {tc('打开公开页', 'Open public page')}
                 </button>
               </div>
             </div>
@@ -236,18 +275,27 @@ export default function SimpleDashboard() {
             <div className="mono-panel" style={{ background: 'rgba(255,255,255,0.56)' }}>
               <div className="mono-kicker">Current Signal</div>
               <h2 style={{ margin: '14px 0 8px', fontSize: '2rem', letterSpacing: '-0.05em' }}>
-                {totalCards > 0 ? '已经可以开始分发' : '先绑定第一张卡片'}
+                {totalCards > 0
+                  ? tc('已经可以开始分发', 'Ready for distribution')
+                  : tc('先绑定第一张卡片', 'Bind your first card')}
               </h2>
               <p className="mono-panel-meta">
                 {mostUsedCard
-                  ? `目前最常用的是 ${mostUsedCard.card_name}，累计 ${mostUsedCard.scan_count || 0} 次扫描。`
-                  : '先打通第一条真实链路：卡片绑定、NFC 跳转、主页访问和链接点击。'}
+                  ? tc(
+                      `目前最常用的是 ${mostUsedCard.card_name}，累计 ${mostUsedCard.scan_count || 0} 次扫描。`,
+                      `Most-used card: ${mostUsedCard.card_name} with ${mostUsedCard.scan_count || 0} scans.`,
+                    )
+                  : tc(
+                      '先打通第一条真实链路：卡片绑定、NFC 跳转、主页访问和链接点击。',
+                      'Start by connecting the first full flow: bind card, NFC redirect, page view, link click.',
+                    )}
               </p>
               <div className="mono-list-row" style={{ marginTop: 20 }}>
                 <div className="mono-list-row-main">
                   <div className="mono-kicker">Public Page</div>
                   <div className="mono-note" style={{ marginTop: 6, wordBreak: 'break-all' }}>
-                    {profileUrl || '登录后自动生成公开主页地址'}
+                    {profileUrl ||
+                      tc('登录后自动生成公开主页地址', 'Public URL appears after login')}
                   </div>
                 </div>
                 <div className="mono-badge">{clickRate} CTR</div>
@@ -273,19 +321,31 @@ export default function SimpleDashboard() {
               <span></span>
             </div>
             <div className="mono-note" style={{ marginTop: 12 }}>
-              正在整理你的 NFC 数据...
+              {tc('正在整理你的 NFC 数据...', 'Preparing your NFC data...')}
             </div>
           </div>
         ) : (
           <>
             <section className="mono-grid-4" style={{ marginBottom: 20 }}>
-              <Stat label="Cards" value={totalCards} note="绑定的 NFC 卡片" />
-              <Stat label="Active" value={activeCards} note="当前激活的卡片" />
-              <Stat label="Scans" value={totalScans} note="累计 NFC 扫描" />
               <Stat
-                label="Views / Clicks"
+                label={tc('卡片数', 'Cards')}
+                value={totalCards}
+                note={tc('绑定的 NFC 卡片', 'Bound NFC cards')}
+              />
+              <Stat
+                label={tc('激活数', 'Active')}
+                value={activeCards}
+                note={tc('当前激活的卡片', 'Currently active cards')}
+              />
+              <Stat
+                label={tc('扫描数', 'Scans')}
+                value={totalScans}
+                note={tc('累计 NFC 扫描', 'Total NFC scans')}
+              />
+              <Stat
+                label={tc('访问 / 点击', 'Views / Clicks')}
                 value={`${totalViews} / ${totalClicks}`}
-                note="公开页访问与点击"
+                note={tc('公开页访问与点击', 'Public page views and clicks')}
               />
             </section>
 
@@ -294,29 +354,29 @@ export default function SimpleDashboard() {
                 <div className="mono-panel-header">
                   <div>
                     <div className="mono-kicker">Bind New Card</div>
-                    <h2>把真实卡片接入系统</h2>
+                    <h2>{tc('把真实卡片接入系统', 'Bind a real card')}</h2>
                   </div>
                   <span className="mono-badge">Max 20</span>
                 </div>
 
                 <form className="mono-stack" style={{ marginTop: 20 }} onSubmit={handleCreateCard}>
                   <div className="mono-field">
-                    <label>Card Name</label>
+                    <label>{tc('卡片名称', 'Card Name')}</label>
                     <input
                       className="mono-input"
                       value={form.card_name}
-                      placeholder="例如：商务交换卡"
+                      placeholder={tc('例如：商务交换卡', 'e.g. Event card')}
                       onChange={event =>
                         setForm(current => ({ ...current, card_name: event.target.value }))
                       }
                     />
                   </div>
                   <div className="mono-field">
-                    <label>Card Serial</label>
+                    <label>{tc('芯片序列号', 'Card Serial')}</label>
                     <input
                       className="mono-input"
                       value={form.card_serial}
-                      placeholder="例如：04:A1:BC:9F"
+                      placeholder={tc('例如：04:A1:BC:9F', 'e.g. 04:A1:BC:9F')}
                       onChange={event =>
                         setForm(current => ({
                           ...current,
@@ -326,18 +386,21 @@ export default function SimpleDashboard() {
                     />
                   </div>
                   <div className="mono-note">
-                    支持十六进制和冒号格式。之后可以把 `/nfc/serial` 写入芯片。
+                    {tc(
+                      '支持十六进制和冒号格式。之后可以把 `/nfc/serial` 写入芯片。',
+                      'Hex and colon format supported. Then write `/nfc/serial` to the chip.',
+                    )}
                   </div>
                   <div className="mono-actions-inline" style={{ justifyContent: 'flex-start' }}>
                     <button className="mono-btn" type="submit" disabled={submitting}>
-                      {submitting ? '绑定中...' : '绑定卡片'}
+                      {submitting ? tc('绑定中...', 'Binding...') : tc('绑定卡片', 'Bind card')}
                     </button>
                     <button
                       className="mono-btn-ghost"
                       type="button"
                       onClick={() => setForm(EMPTY_FORM)}
                     >
-                      清空
+                      {tc('清空', 'Clear')}
                     </button>
                   </div>
                 </form>
@@ -347,26 +410,39 @@ export default function SimpleDashboard() {
                 <div className="mono-panel-header">
                   <div>
                     <div className="mono-kicker">Direction</div>
-                    <h2>接下来最值得推进的地方</h2>
+                    <h2>{tc('接下来最值得推进的地方', 'What to improve next')}</h2>
                   </div>
                 </div>
                 <div className="mono-stack">
                   <div className="mono-surface" style={{ padding: 18, borderRadius: 20 }}>
-                    <strong>先把公开页打磨成能承接注意力的页面。</strong>
+                    <strong>
+                      {tc('先把公开页打磨成能承接注意力的页面。', 'Polish the public page first.')}
+                    </strong>
                     <div className="mono-note" style={{ marginTop: 6 }}>
-                      NFC 被扫之后，真正留住用户的是公开页，不是后台。
+                      {tc(
+                        'NFC 被扫之后，真正留住用户的是公开页，不是后台。',
+                        'After an NFC tap, the public page retains users.',
+                      )}
                     </div>
                   </div>
                   <div className="mono-surface" style={{ padding: 18, borderRadius: 20 }}>
-                    <strong>不同场景对应不同卡片。</strong>
+                    <strong>
+                      {tc('不同场景对应不同卡片。', 'Different scenarios need different cards.')}
+                    </strong>
                     <div className="mono-note" style={{ marginTop: 6 }}>
-                      展会卡、销售卡、品牌卡，应该被当作不同触达入口来运营。
+                      {tc(
+                        '展会卡、销售卡、品牌卡，应该被当作不同触达入口来运营。',
+                        'Treat event, sales, and brand cards as different entry points.',
+                      )}
                     </div>
                   </div>
                   <div className="mono-surface" style={{ padding: 18, borderRadius: 20 }}>
-                    <strong>把分析页变成决策页。</strong>
+                    <strong>{tc('把分析页变成决策页。', 'Turn analytics into decisions.')}</strong>
                     <div className="mono-note" style={{ marginTop: 6 }}>
-                      看趋势、看卡片、看点击，最后指向的是“哪种内容最有效”。
+                      {tc(
+                        '看趋势、看卡片、看点击，最后指向的是“哪种内容最有效”。',
+                        'Trends, cards, and clicks should answer: what content performs best?',
+                      )}
                     </div>
                   </div>
                 </div>
@@ -377,14 +453,17 @@ export default function SimpleDashboard() {
               <div className="mono-panel-header">
                 <div>
                   <div className="mono-kicker">Bound Cards</div>
-                  <h2>已绑定卡片</h2>
+                  <h2>{tc('已绑定卡片', 'Bound cards')}</h2>
                 </div>
-                <span className="mono-badge">{cards.length} 张</span>
+                <span className="mono-badge">{tc(`${cards.length} 张`, `${cards.length}`)}</span>
               </div>
 
               {cards.length === 0 ? (
                 <div className="mono-note">
-                  还没有 NFC 卡片。绑定第一张之后，这个产品的价值会立刻具体起来。
+                  {tc(
+                    '还没有 NFC 卡片。绑定第一张之后，这个产品的价值会立刻具体起来。',
+                    'No NFC cards yet. Bind the first card to activate the workflow.',
+                  )}
                 </div>
               ) : (
                 <div className="mono-list">
@@ -394,13 +473,17 @@ export default function SimpleDashboard() {
                         <div className="mono-list-row-title">
                           <h3>{card.card_name}</h3>
                           <span className={`mono-status ${card.active ? 'is-live' : ''}`}>
-                            {card.active ? '已启用' : '已停用'}
+                            {card.active ? tc('已启用', 'Active') : tc('已停用', 'Inactive')}
                           </span>
                         </div>
                         <div className="mono-list-row-meta">
-                          <span>序列号 {card.card_serial}</span>
-                          <span>{card.scan_count || 0} 次扫描</span>
-                          <span>{formatDate(card.last_used_at)}</span>
+                          <span>
+                            {tc('序列号', 'Serial')} {card.card_serial}
+                          </span>
+                          <span>
+                            {tc(`${card.scan_count || 0} 次扫描`, `${card.scan_count || 0} scans`)}
+                          </span>
+                          <span>{formatDate(card.last_used_at, locale)}</span>
                         </div>
                       </div>
 
@@ -408,19 +491,22 @@ export default function SimpleDashboard() {
                         <button
                           className="mono-btn-ghost"
                           onClick={() =>
-                            handleCopy('卡片跳转地址', getNfcRedirectUrl(card.card_serial))
+                            handleCopy(
+                              tc('卡片跳转地址', 'Card redirect URL'),
+                              getNfcRedirectUrl(card.card_serial),
+                            )
                           }
                         >
-                          复制跳转地址
+                          {tc('复制跳转地址', 'Copy redirect URL')}
                         </button>
                         <button className="mono-btn-muted" onClick={() => handleToggleCard(card)}>
-                          {card.active ? '停用' : '启用'}
+                          {card.active ? tc('停用', 'Disable') : tc('启用', 'Enable')}
                         </button>
                         <button
                           className="mono-btn-ghost"
                           onClick={() => handleDeleteCard(card.id)}
                         >
-                          解绑
+                          {tc('解绑', 'Unbind')}
                         </button>
                       </div>
                     </article>
